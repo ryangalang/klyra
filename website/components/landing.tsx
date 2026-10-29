@@ -67,7 +67,7 @@ export default function Landing() {
         <div className="hero-edition section-width"><span>MUSIC. ON YOUR TERMS.</span><span>ANDROID / WINDOWS</span></div>
         <h1 id="hero-title" className="hero-wordmark">Klyra</h1>
         <div className="hero-product section-width">
-          <div className="hero-editorial"><h2>Every song,<br/>a little closer.</h2><p>A native music app.<br/>A space for your entire taste.</p><a className="button hero-download" href="#download">Get Klyra <ArrowDownToLine size={17}/></a><a className="hero-explore" href="#experience">Explore the experience <ArrowDown size={14}/></a></div>
+          <div className="hero-editorial"><h2>Every song,<br/>{" "}a little closer.</h2><p>A native music app.<br/>{" "}A space for your entire taste.</p><a className="button hero-download" href="#download">Get Klyra <ArrowDownToLine size={17}/></a><a className="hero-explore" href="#experience">Explore the experience <ArrowDown size={14}/></a></div>
           <div className="hero-device"><Phone mood={heroTrack}/></div>
           <div className="hero-side-note"><span className="tiny-caps">01 / NOW PLAYING</span><div className="hero-rule"/><AudioLines size={28} strokeWidth={1}/><h3>Just you.<br/>And the music.</h3><p>Your player, lyrics and queue.<br/>One uninterrupted feeling.</p><span className="side-signature"><Mark/> Developed by Ryan</span></div>
         </div>

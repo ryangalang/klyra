@@ -1,6 +1,6 @@
 export const release = {
   version: "1.8-klyra.4", code: 29, date: "October 29, 2026",
-  repository: "ryangalang/klyra", tag: "v1.8-klyra.4",
+  repository: process.env.KLYRA_DOWNLOAD_REPOSITORY || "ryangalang/klyra", tag: "v1.8-klyra.4",
 };
 export const assets = {
   android: { file: "Klyra-Android-arm64.apk", label: "Android · ARM64", size: "51.8 MB", sha256: "9dfed8f724c3b9c51c9c6e6bbe2d2ec0570979f19a98cd2e30e4614b7ba45e93" },

@@ -1,0 +1,5 @@
+.env.local
+qa/
+tests/
+build-log.txt
+*.tsbuildinfo

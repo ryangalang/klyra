@@ -6,3 +6,4 @@ out/
 .vercel/
 *.tsbuildinfo
 qa/
+build-log.txt
