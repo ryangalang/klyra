@@ -28,7 +28,7 @@ object DesktopDownloadManager {
         return try {
             require(song.localPath == null) { "This track is already local" }
             val stream = DesktopMusicSources.resolve(song, quality, forDownload = true).getOrThrow()
-            val directory = Path.of(System.getProperty("user.home"), "Music", "BitChord")
+            val directory = Path.of(System.getProperty("user.home"), "Music", "KLYRA")
             Files.createDirectories(directory)
             val safeName = buildString {
                 append(song.artist)
@@ -40,6 +40,11 @@ object DesktopDownloadManager {
             val manifest = DesktopManifestDownload.isManifest(stream)
             val extension = stream.format.fileExtension().let { if (manifest && it != "flac") "m4a" else it }
             val target = directory.resolve("$safeName.$extension")
+            // Old exported files remain playable and reusable; do not move or delete them.
+            val legacyTarget = Path.of(System.getProperty("user.home"), "Music", "BitChord", "$safeName.$extension")
+            if (!Files.exists(target) && Files.isRegularFile(legacyTarget) && Files.size(legacyTarget) > 0L) {
+                return Result.success(song.copy(localUri = legacyTarget.toUri().toString(), localPath = legacyTarget.toString()))
+            }
             val temporary = directory.resolve(".$safeName.$extension.part")
             if (Files.isRegularFile(target) && Files.size(target) > 0L) {
                 return Result.success(song.copy(localUri = target.toUri().toString(), localPath = target.toString()))

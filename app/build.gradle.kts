@@ -49,7 +49,7 @@ val lastfmSecret: String = (
 val listenTogetherServer: String = (
     localProps.getProperty("LISTEN_TOGETHER_SERVER")
         ?: System.getenv("LISTEN_TOGETHER_SERVER")
-        ?: "https://bitchord-listen-together.onrender.com"
+        ?: ""
     ).trim().trimEnd('/')
 
 /*
@@ -75,13 +75,17 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.music.bitchord"
+        for (name in listOf("SUPABASE_URL", "SUPABASE_ANON_KEY")) {
+            val value = localProps.getProperty(name).orEmpty().replace("\\", "\\\\").replace("\"", "\\\"")
+            buildConfigField("String", name, "\"$value\"")
+        }
+        applicationId = "app.klyra.foundation"
         // 26 keeps reach wide; real-time blur (RenderEffect) kicks in on API 31+,
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "1.8"
+        versionCode = 29
+        versionName = "1.8-klyra.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -118,8 +122,8 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            applicationId = "com.dev.bitchord"
-            resValue("string", "app_name", "BitChord Dev")
+            applicationId = "app.klyra.foundation.preview"
+            resValue("string", "app_name", "Klyra")
         }
         create("prod") {
             dimension = "env"
@@ -184,6 +188,12 @@ android {
          * build is interpreted and verified at runtime and says little about
          * either. `./gradlew installDevBenchmark`.
          */
+        create("preview") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            matchingFallbacks += listOf("release")
+        }
         create("benchmark") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
@@ -216,6 +226,8 @@ android {
             isReturnDefaultValues = true
         }
     }
+    // Allows the real playback instrumented test to target the optimized APK.
+    testBuildType = providers.gradleProperty("klyra.testBuildType").orElse("debug").get()
 }
 
 kotlin {

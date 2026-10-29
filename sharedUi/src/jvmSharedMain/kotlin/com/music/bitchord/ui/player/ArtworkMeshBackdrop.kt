@@ -253,8 +253,10 @@ fun rememberArtworkMesh(
         // the first read after a surface recreation, before ExoPlayer has
         // decoded real content.  A frame whose mean luminance is below this
         // threshold is discarded; the last valid mesh is kept instead.
-        if (isLikelyBlackFrame(frame)) return@LaunchedEffect
-        mesh = withContext(Dispatchers.Default) { meshOf(frame, imageUrl?.hashCode() ?: 0) } ?: mesh
+        val next = withContext(Dispatchers.Default) {
+            if (isLikelyBlackFrame(frame)) null else meshOf(frame, imageUrl?.hashCode() ?: 0)
+        } ?: return@LaunchedEffect
+        mesh = next
         meshUrl = imageUrl
     }
     return mesh

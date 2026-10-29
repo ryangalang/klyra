@@ -156,7 +156,7 @@ void pump() {
     // Never shown. SMTC only needs a handle to hang itself off, and a visible
     // window here would be a second BitChord in the taskbar.
     g_window = CreateWindowExW(
-        0, L"BitChordSmtcWindow", L"BitChord", WS_OVERLAPPED,
+        0, L"BitChordSmtcWindow", L"KLYRA", WS_OVERLAPPED,
         0, 0, 0, 0, nullptr, nullptr, description.hInstance, nullptr);
     if (g_window == nullptr) {
         g_running = false;

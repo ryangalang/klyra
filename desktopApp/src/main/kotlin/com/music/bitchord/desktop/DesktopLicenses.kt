@@ -21,10 +21,13 @@ internal object DesktopLicenses {
             "This application",
             listOf(
                 DesktopLicense(
-                    "BitChord",
+                    "Klyra — derived from BitChord",
                     "GPL-3.0-or-later",
                     "https://www.gnu.org/licenses/gpl-3.0.html",
-                    "Your music, your way.",
+                    "Modified from BitChord by kushagrasinghx and contributors. Original notices remain applicable. " +
+                        "Klyra branding, account integration and UI modifications: 2026. No warranty. " +
+                        "The matching Klyra-corresponding-source.zip and LICENSE accompany this preview. " +
+                        "Upstream source: https://github.com/kushagrasinghx/BitChord",
                 ),
             ),
         ),

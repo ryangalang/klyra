@@ -476,6 +476,10 @@ compose.desktop {
         jvmArgs("-Xmx512m")
         jvmArgs("-XX:+UseG1GC", "-XX:G1PeriodicGCInterval=20000", "-XX:G1PeriodicGCSystemLoadThreshold=0")
         jvmArgs("-Dbitchord.version=$appVersion")
+        for (name in listOf("SUPABASE_URL", "SUPABASE_ANON_KEY")) {
+            val value = localProperty(name)
+            if (value.isNotBlank()) jvmArgs("-Dklyra.$name=$value")
+        }
         if (desktopModuleIndexUrl.isNotBlank()) {
             jvmArgs("-Dbitchord.module.index=$desktopModuleIndexUrl")
         }
@@ -500,10 +504,10 @@ compose.desktop {
                 TargetFormat.Deb,
                 TargetFormat.Rpm,
             )
-            packageName = "BitChord"
+            packageName = "Klyra"
             packageVersion = nativePackageVersion
-            description = if (targetOs == "windows") "BitChord" else "Aesthetic YouTube Music client"
-            vendor = "BitChord contributors"
+            description = "Klyra music player"
+            vendor = "Klyra"
             copyright = "Copyright © 2026 BitChord contributors"
 
             modules(
@@ -540,8 +544,8 @@ compose.desktop {
 
             windows {
                 iconFile.set(project.file("packaging/icons/AppIcon.ico"))
-                upgradeUuid = "8f3c1d24-6a2b-4f5e-9c17-2b8d54e0a913"
-                menuGroup = "BitChord"
+                upgradeUuid = "88fb674d-a91a-4148-8610-96978a6047eb"
+                menuGroup = "Klyra"
                 shortcut = true
                 dirChooser = false
                 perUserInstall = true

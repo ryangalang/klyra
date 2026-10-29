@@ -34,15 +34,15 @@ internal object DesktopWindowBackdrop {
             System.getProperty("os.name").orEmpty().contains("11")
 
     private val _selected = MutableStateFlow(
-        runCatching { DesktopBackdrop.valueOf(DesktopPersistence().string(KEY, DesktopBackdrop.MICA.name)) }
-            .getOrDefault(DesktopBackdrop.MICA),
+        runCatching { DesktopBackdrop.valueOf(DesktopPersistence().string(KEY, DesktopBackdrop.OFF.name)) }
+            .getOrDefault(DesktopBackdrop.OFF),
     )
 
     /** What Settings shows and writes. */
     val selected: StateFlow<DesktopBackdrop> = _selected
 
     private val _appBackground = MutableStateFlow(
-        DesktopPersistence().boolean(KEY_APP_BACKGROUND, true),
+        DesktopPersistence().boolean(KEY_APP_BACKGROUND, false),
     )
 
     /** Whether the selected material replaces the app's solid gray page background too. */

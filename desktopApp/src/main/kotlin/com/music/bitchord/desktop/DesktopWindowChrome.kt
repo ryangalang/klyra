@@ -65,7 +65,7 @@ internal object DesktopTitleBarSetting {
 
     internal const val KEY = "window_title_bar"
 
-    private val _enabled = MutableStateFlow(DesktopPersistence().boolean(KEY, false))
+    private val _enabled = MutableStateFlow(DesktopPersistence().boolean(KEY, true))
 
     /** What Settings shows and writes. */
     val enabled: StateFlow<Boolean> = _enabled

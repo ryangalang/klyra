@@ -26,6 +26,7 @@ import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 
 fun main() {
+    installKlyraCloud()
     // The player is the phone's, from the shared UI module; this is what it reads underneath.
     PlayerPlatform.install(DesktopPlayerHost)
     com.music.bitchord.ui.AppUi.install(DesktopAppUiHost)
@@ -52,7 +53,7 @@ fun main() {
         ).asTokenProvider(),
     )
     // The public "apps open right now" count; see Presence.
-    DesktopPresence.install()
+    // Klyra does not report installations to upstream BitChord's presence service.
     desktopMain()
 }
 
@@ -73,7 +74,7 @@ private fun desktopMain() = application {
     Window(
         onCloseRequest = { if (DesktopWindowVisibility.onCloseRequest()) exitApplication() },
         visible = visible,
-        title = "BitChord",
+        title = "Klyra",
         icon = painterResource(Res.drawable.logo),
         state = state,
         // No system title bar on Windows, where the application draws its own instead — see
@@ -112,7 +113,7 @@ private fun desktopMain() = application {
                 (openingSize.width.value * transform.scaleX).roundToInt(),
                 (openingSize.height.value * transform.scaleY).roundToInt(),
             )
-            if (DesktopPlatform.isWindows && DesktopWindowsFrame.install("BitChord")) {
+            if (DesktopPlatform.drawsOwnWindowFrame && DesktopWindowsFrame.install("Klyra")) {
                 DesktopWindowBackdrop.apply()
             }
         }

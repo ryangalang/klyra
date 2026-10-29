@@ -43,6 +43,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
+        com.music.bitchord.auth.installKlyraCloud(this)
         // The player is drawn by the shared UI module; this is what it reads
         // underneath — settings, the Canvas decoder, outputs, the party.
         AndroidStreamHooks.installEarly()
@@ -152,7 +153,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         // Initialize LastFM with saved settings if available
         initLastfm()
         // The public "apps open right now" count; see Presence.
-        com.music.bitchord.data.presence.AndroidPresence.install(this)
+        // KLYRA does not report installations to upstream BitChord's presence service.
         backgroundInit.join()
     }
 

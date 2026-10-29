@@ -169,7 +169,7 @@ private const val UNSUNG_ALPHA_STRIP = 0.55f
  * — so a line of quick syllables has no glow at all and a carried note lights
  * up letter by letter, which is where the light was always meant to come from.
  */
-private const val GLOW_ALPHA = 0.62f
+private const val GLOW_ALPHA = 0f // KLYRA: typography carries emphasis; no blurred halo.
 
 /**
  * How far the bloom spreads off a letter. Tight, because it is a letter's worth
@@ -803,7 +803,7 @@ private fun SweptLyricLine(
     // enough, and the three copies all take both, so they still land on top of
     // each other.
     Box(
-        modifier.lyricParticles(layout, translationProgress, glowRoom),
+        modifier,
         contentAlignment = if (alignEnd) Alignment.TopEnd else Alignment.TopStart,
     ) {
         Text(
@@ -2362,7 +2362,7 @@ private fun PanelVoice(
             style = style,
             color = Color.White.copy(alpha = lit),
             onTextLayout = { layout = it },
-            modifier = modifier.lyricParticles(layout, translationProgress, room).padding(room),
+            modifier = modifier.padding(room),
         )
     }
 }

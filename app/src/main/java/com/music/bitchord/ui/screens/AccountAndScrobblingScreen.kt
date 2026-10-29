@@ -83,6 +83,7 @@ fun AccountAndScrobblingScreen(
 
         // One card: who is signed in, which profile is listening, and the way
         // out, with the explanation of profiles underneath.
+        KlyraAccountCard()
         SettingsGroup(
             footer = if (signedIn) stringResource(R.string.account_profiles_help) else null,
             topSpacing = 0.dp,

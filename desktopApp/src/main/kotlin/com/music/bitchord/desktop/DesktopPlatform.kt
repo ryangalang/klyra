@@ -10,5 +10,6 @@ internal object DesktopPlatform {
     val isLinux: Boolean = name.contains("linux", ignoreCase = true)
 
     /** Whether the application draws the window's own frame instead of the system drawing it. */
-    val drawsOwnWindowFrame: Boolean = isWindows
+    // KLYRA uses the native Windows caption and resize/snap behavior.
+    val drawsOwnWindowFrame: Boolean = false
 }

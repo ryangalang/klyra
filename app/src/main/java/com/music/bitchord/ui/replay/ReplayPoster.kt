@@ -406,11 +406,11 @@ private fun drawHeader(
     val brand = type.heading(46f, 0xE6FFFFFF.toInt()).apply {
         textAlign = Paint.Align.RIGHT
     }
-    canvas.drawText("BitChord", POSTER_W - MARGIN, 132f, brand)
+    canvas.drawText("Klyra", POSTER_W - MARGIN, 132f, brand)
     // The mark, to the left of the word, exactly as the story header and the
     // card carry it. Without it the one artefact of this app that ends up in
     // somebody else's chat was the only place the logo didn't appear.
-    val wordWidth = brand.measureText("BitChord")
+    val wordWidth = brand.measureText("Klyra")
     drawLogo(canvas, context, POSTER_W - MARGIN - wordWidth - LOGO_GAP, 132f)
 
     val credit = listOfNotNull(
@@ -728,9 +728,9 @@ internal fun ellipsised(text: String, paint: Paint, width: Float): String {
  * share button.
  */
 internal class Fonts(context: Context) {
-    private val heavy = font(context, R.font.sf_pro_display_heavy) ?: Typeface.DEFAULT_BOLD
-    private val semibold = font(context, R.font.sf_pro_display_semibold) ?: Typeface.DEFAULT_BOLD
-    private val regular = font(context, R.font.sf_pro_display_regular) ?: Typeface.DEFAULT
+    private val heavy = Typeface.DEFAULT_BOLD
+    private val semibold = Typeface.DEFAULT_BOLD
+    private val regular = Typeface.DEFAULT
 
     fun heading(size: Float, color: Int) = paint(heavy, size, color)
 
@@ -767,8 +767,8 @@ private const val POSTER_H = 1920
 
 private const val MARGIN = 72f
 
-/** The mark's drawn size. 730×484 in the vector, so this keeps its proportions. */
-private const val LOGO_W = 66f
+/** The square Klyra mark, without stretching its proportions. */
+private const val LOGO_W = 44f
 private const val LOGO_H = 44f
 private const val LOGO_GAP = 20f
 

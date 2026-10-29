@@ -22,42 +22,12 @@ import com.music.bitchord.R
 // spots (Replay's rank badge) that want that specific red regardless of theme.
 val AccentRed = Color(0xFFFA2D48)
 
-private val DarkColors = darkColorScheme(
-    primary = Color.White,
-    onPrimary = Color.Black,
-    background = Color.Black,
-    onBackground = Color.White,
-    surface = Color(0xFF0D0D0F),
-    onSurface = Color.White,
-    surfaceVariant = Color(0xFF1C1C1E),
-    onSurfaceVariant = Color(0xFF8E8E93),
-    outline = Color(0xFF2C2C2E),
-)
+private val DarkColors = klyraColors(dark = true)
 
-private val LightColors = lightColorScheme(
-    primary = Color.Black,
-    onPrimary = Color.White,
-    background = Color.White,
-    onBackground = Color.Black,
-    surface = Color(0xFFF7F7F9),
-    onSurface = Color.Black,
-    surfaceVariant = Color(0xFFF2F2F7),
-    onSurfaceVariant = Color(0xFF6E6E73),
-    outline = Color(0xFFE5E5EA),
-)
+private val LightColors = klyraColors(dark = false)
 
-/**
- * SF Pro Display, the face Apple Music itself is set in. Only the weights the
- * type scale actually asks for are bundled; Compose synthesises nothing, so a
- * missing weight would silently fall back to the nearest one shipped.
- */
-val SFProDisplay = FontFamily(
-    Font(R.font.sf_pro_display_regular, FontWeight.W400),
-    Font(R.font.sf_pro_display_medium, FontWeight.W500),
-    Font(R.font.sf_pro_display_semibold, FontWeight.W600),
-    Font(R.font.sf_pro_display_bold, FontWeight.W700),
-    Font(R.font.sf_pro_display_heavy, FontWeight.W800),
-)
+// KLYRA uses the platform sans-serif family; no Apple font assets are bundled.
+val KlyraSans = FontFamily.SansSerif
 
 // Heavy, tight typography — the backbone of the Apple Music look.
 private val BitChordTypography = Typography(
@@ -70,7 +40,7 @@ private val BitChordTypography = Typography(
     bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp),
     labelMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 12.sp),
     labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
-).withFamily(SFProDisplay)
+).withFamily(KlyraSans)
 
 /** Applies [family] to every style in the scale, so nothing is left on Roboto. */
 private fun Typography.withFamily(family: FontFamily) = Typography(

@@ -29,7 +29,9 @@ buildscript {
          * palette in place, which is why prod builds were fine and only dev
          * crashed. Removable once AGP itself bundles something past 8.11.32.
          */
-        classpath("com.android.tools:r8:8.13.23")
+        // Some resolved dependencies carry Kotlin 2.4 metadata. R8 9.1.29 is
+        // the documented minimum; 9.1.57 is published in stable Google Maven.
+        classpath("com.android.tools:r8:9.1.57")
     }
 }
 plugins {

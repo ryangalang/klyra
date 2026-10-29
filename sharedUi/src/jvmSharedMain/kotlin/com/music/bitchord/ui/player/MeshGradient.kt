@@ -106,9 +106,10 @@ fun MeshGradientBackground(
 ) {
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
 
-    val tuned = (palette.colors.ifEmpty { FallbackColors } + FallbackColors)
-        .take(4)
-        .map { it.tuned() }
+    val reduceDynamicBlur by PlayerSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val tuned = remember(palette) {
+        (palette.colors.ifEmpty { FallbackColors } + FallbackColors).take(4).map { it.tuned() }
+    }
 
     // Each colour slot crossfades independently when the track (palette) changes,
     // unless "reduce animation" is on, in which case colours snap straight to target.
@@ -164,7 +165,7 @@ fun MeshGradientBackground(
                 scaleY = 1.3f
             }
             .background(baseColor)
-            .blur(blurRadius),
+            .then(if (reduceDynamicBlur) Modifier else Modifier.blur(blurRadius)),
     ) {
         val anchors = listOf(
             Offset(0.20f, 0.25f),
@@ -228,7 +229,9 @@ fun rememberArtworkColors(imageUrl: String?, canvasFrame: ImageBitmap? = null): 
             .build()
         val result = SingletonImageLoader.get(context).execute(request)
         val bitmap = (result as? SuccessResult)?.image?.toImageBitmap() ?: return@LaunchedEffect
-        palette = MeshPalette(paletteOf(bitmap))
+        // Quantization reads and sorts pixels; it must not block scrolling or
+        // the mini-player expansion on the UI dispatcher.
+        palette = MeshPalette(withContext(Dispatchers.Default) { paletteOf(bitmap) })
     }
 
     LaunchedEffect(canvasFrame) {
@@ -236,8 +239,9 @@ fun rememberArtworkColors(imageUrl: String?, canvasFrame: ImageBitmap? = null): 
         // Reject near-black frames (first read after surface recreation, before
         // ExoPlayer decodes real content).  A dark sleeve will still exceed the
         // threshold because compression noise pushes mean luminance above ~12.
-        if (isLikelyBlackFrame(frame)) return@LaunchedEffect
-        val colors = withContext(Dispatchers.Default) { paletteOf(frame) }
+        val colors = withContext(Dispatchers.Default) {
+            if (isLikelyBlackFrame(frame)) null else paletteOf(frame)
+        } ?: return@LaunchedEffect
         palette = MeshPalette(colors)
     }
     return palette

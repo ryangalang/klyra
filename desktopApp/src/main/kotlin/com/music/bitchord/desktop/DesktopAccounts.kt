@@ -304,9 +304,9 @@ internal object DesktopAccounts {
     // ---- Where the credential itself lives ---------------------------------
 
     private fun attributesFor(accountId: String) =
-        mapOf("application" to "bitchord", "account" to accountId)
+        mapOf("application" to "klyra-foundation", "account" to accountId)
 
-    /** The keyring first, and a preference only when there is no keyring. */
+    /** KLYRA requires protected storage before persisting a sign-in. */
     private fun writeCookie(accountId: String, cookie: String) {
         val stored = DesktopSecretStore.store(
             label = DesktopStrings["d_bitchord_youtube_music_session", "BitChord — YouTube Music session"],
@@ -316,15 +316,12 @@ internal object DesktopAccounts {
         if (stored) {
             persistence.saveString(cookieFallbackKey(accountId), "")
         } else {
-            DesktopTrackLog.log("no keyring available; keeping the session in preferences instead")
-            DesktopPreferenceChunks.write(persistence.preferences, cookieFallbackKey(accountId), cookie)
+            error("Secure credential storage is unavailable. Sign-in was not saved; try again after unlocking your system credential store.")
         }
     }
 
     fun cookieOf(accountId: String): String? =
         DesktopSecretStore.lookup(attributesFor(accountId))?.toString(Charsets.UTF_8)?.takeIf { it.isNotBlank() }
-            ?: DesktopPreferenceChunks.read(persistence.preferences, cookieFallbackKey(accountId))
-                ?.takeIf { it.isNotBlank() }
 
     private fun cookieFallbackKey(accountId: String) = "google_cookie_$accountId"
 

@@ -1,0 +1,11 @@
+Klyra — Every song, a little closer.
+
+This application is a modified derivative of BitChord by kushagrasinghx and contributors.
+Original copyright and license notices remain applicable. Klyra is not an official BitChord or YouTube product.
+
+Klyra modifications (2026): original branding, account and library synchronization, interface adaptations, and performance defaults. Licensed under GNU GPL version 3. Provided without warranty; see the full license below.
+
+Corresponding source for this preview is supplied alongside the APK in Klyra-corresponding-source.zip, including the modifications, build scripts and retained upstream notices. The upstream repository alone is not the source for this modified build.
+
+Upstream: https://github.com/kushagrasinghx/BitChord
+Additional dependency acknowledgements appear in the corresponding source and their original license files.

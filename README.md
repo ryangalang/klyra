@@ -1,3 +1,16 @@
+# KLYRA Preview
+
+Every song, a little closer.
+
+This is a modified GPLv3 derivative of BitChord. Start with [KLYRA.md](KLYRA.md)
+for the architecture decision and provider limitations, [KLYRA_BUILD.md](KLYRA_BUILD.md)
+for builds and account setup, and [KLYRA_CHANGES.md](KLYRA_CHANGES.md) for modifications.
+The original project documentation below is retained as upstream attribution;
+its screenshots, download links, services and release claims describe BitChord,
+not this KLYRA preview.
+
+---
+
 <div align="center">
 
 <br/>

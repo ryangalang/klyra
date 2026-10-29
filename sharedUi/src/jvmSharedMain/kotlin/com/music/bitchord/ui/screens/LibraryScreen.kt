@@ -141,6 +141,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "replay") { replay() }
+            item(key = "klyra-library") { KlyraLibrarySection(onShelfItemClick) }
             if (links.isNotEmpty()) {
                 item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
             }

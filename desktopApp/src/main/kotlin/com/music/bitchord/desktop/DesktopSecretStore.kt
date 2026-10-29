@@ -8,6 +8,11 @@ import org.freedesktop.dbus.types.Variant
 
 /** The platform's own password store, for the credentials this app holds. */
 internal object DesktopSecretStore {
+    private val windows by lazy {
+        val local = System.getenv("LOCALAPPDATA")
+            ?: java.nio.file.Path.of(System.getProperty("user.home"), "AppData", "Local").toString()
+        WindowsCredentialStore(java.nio.file.Path.of(local, "KLYRA Preview", "credentials"))
+    }
 
     /** Plain-text transport. */
     private const val PLAIN = "plain"
@@ -33,7 +38,7 @@ internal object DesktopSecretStore {
     }
 
     /** The first secret stored under [attributes], as bytes. */
-    fun lookup(attributes: Map<String, String>): ByteArray? = withService { _, service, session ->
+    fun lookup(attributes: Map<String, String>): ByteArray? = if (DesktopPlatform.isWindows) windows.lookup(attributes) else withService { _, service, session ->
         val found = service.SearchItems(attributes)
         val items = buildList {
             addAll(found.unlocked)
@@ -47,7 +52,7 @@ internal object DesktopSecretStore {
 
     /** Stores [secret] under [attributes], replacing whatever was there. */
     fun store(label: String, attributes: Map<String, String>, secret: ByteArray): Boolean =
-        withService { connection, service, session ->
+        if (DesktopPlatform.isWindows) windows.store(attributes, secret) else withService { connection, service, session ->
             val collection = runCatching { service.ReadAlias("default")?.path }
                 .getOrNull()
                 ?.takeIf { it.isNotBlank() && it != "/" }
@@ -70,7 +75,7 @@ internal object DesktopSecretStore {
         } ?: false
 
     /** Forgets everything stored under [attributes]. */
-    fun remove(attributes: Map<String, String>): Boolean = withService { connection, service, _ ->
+    fun remove(attributes: Map<String, String>): Boolean = if (DesktopPlatform.isWindows) windows.remove(attributes) else withService { connection, service, _ ->
         val found = service.SearchItems(attributes)
         (found.unlocked + found.locked).forEach { path ->
             runCatching {
@@ -85,5 +90,5 @@ internal object DesktopSecretStore {
     } ?: false
 
     /** Whether a store is actually reachable, for the settings screen to say so. */
-    fun isAvailable(): Boolean = withService { _, _, _ -> true } == true
+    fun isAvailable(): Boolean = if (DesktopPlatform.isWindows) windows.available() else withService { _, _, _ -> true } == true
 }

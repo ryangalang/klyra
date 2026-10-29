@@ -20,7 +20,7 @@ import com.music.bitchord.data.DebugLog as Log
  * plain fallback collected meanwhile is moved back in.
  *
  * A Keystore that can't be used at all, which a handful of OEM builds ship,
- * still degrades to the plain file rather than failing launch.
+ * falls back to process-memory preferences rather than writing credentials unencrypted.
  */
 internal object EncryptedPrefs {
 
@@ -44,7 +44,7 @@ internal object EncryptedPrefs {
                 context.getSharedPreferences(name, Context.MODE_PRIVATE).contains(KEYSET_ENTRY)
             if (!staleKeyset) {
                 Log.w(TAG, "EncryptedSharedPreferences unavailable for $name, falling back: ${describe(e)}")
-                return context.getSharedPreferences(plainName, Context.MODE_PRIVATE)
+                return sessionOnly(context)
             }
             Log.w(TAG, "$name's keyset no longer matches this device's Keystore (${describe(e)}); recreating it")
             context.deleteSharedPreferences(name)
@@ -52,7 +52,7 @@ internal object EncryptedPrefs {
                 create(context, name)
             } catch (retry: Throwable) {
                 Log.w(TAG, "$name could not be recreated, falling back: ${describe(retry)}")
-                return context.getSharedPreferences(plainName, Context.MODE_PRIVATE)
+                return sessionOnly(context)
             }
         }
         moveIn(context, plainName, encrypted, name)
@@ -67,6 +67,13 @@ internal object EncryptedPrefs {
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
+
+    private fun sessionOnly(context: Context): SharedPreferences {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(context, "Secure storage is unavailable. Sign-in will last only until Klyra closes.", android.widget.Toast.LENGTH_LONG).show()
+        }
+        return SessionPreferences()
+    }
 
     /**
      * Moves what an earlier fallback wrote into the encrypted store, then
