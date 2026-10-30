@@ -1,87 +1,686 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, AudioLines, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Code2, Copy, Disc3, Download, Heart, Headphones, House, Library, ListMusic, Menu, Monitor, MoreHorizontal, Music2, Pause, Play, Repeat2, Search, ShieldCheck, Shuffle, SkipBack, SkipForward, Smartphone, Sparkles, Volume2, Wifi, X } from "lucide-react";
+import {
+  ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight,
+  AudioLines, Check, ChevronDown, ChevronLeft, ChevronRight,
+  CircleHelp, Code2, Copy, Disc3, Download, Heart,
+  Headphones, House, Library, ListMusic, Menu, Monitor,
+  MoreHorizontal, Music2, Pause, Play, Repeat2, Search,
+  ShieldCheck, Shuffle, SkipBack, SkipForward, Smartphone,
+  Sparkles, Volume2, Wifi, X
+} from "lucide-react";
 import { Brand, Mark } from "./brand";
-import { keepMe, LyricMotionPreview, IntegrationRail, MusicShelves } from "./music-showcase";
+import {
+  keepMe,
+  LyricMotionPreview,
+  IntegrationRail,
+  MusicShelves
+} from "./music-showcase";
 import catalog from "@/lib/catalog.json";
 import { assets, release, type AssetKey } from "@/lib/release";
 
-const heroTrack = { art: keepMe.artwork, title: "Keep Me", color: "mono" };
-const covers = catalog.slice(0, 4).map(song => ({ art: song.artwork, title: song.title, subtitle: song.artist }));
-function Cover({ art, className = "", alt = "" }: { art: string; className?: string; alt?: string }) {
-  return <img src={art.startsWith("https://") ? art : `/art/${art}.svg`} alt={alt} className={`cover ${className}`} width="400" height="400" loading="lazy" />;
+const heroTrack = {
+  art: keepMe.artwork,
+  title: "Keep Me",
+  color: "mono"
+};
+
+const covers = catalog.slice(0, 4).map(song => ({
+  art: song.artwork,
+  title: song.title,
+  subtitle: song.artist
+}));
+
+function Cover({
+  art,
+  className = "",
+  alt = ""
+}: {
+  art: string;
+  className?: string;
+  alt?: string;
+}) {
+  return (
+    <img
+      src={art.startsWith("https://") ? art : `/art/${art}.svg`}
+      alt={alt}
+      className={`cover ${className}`}
+      width="400"
+      height="400"
+      loading="lazy"
+    />
+  );
 }
-function Transport() { return <div className="transport" aria-hidden="true"><Shuffle size={17}/><SkipBack fill="currentColor" size={24}/><Pause fill="currentColor" size={32}/><SkipForward fill="currentColor" size={24}/><Repeat2 size={17}/></div>; }
+
+function Transport() {
+  return (
+    <div className="transport" aria-hidden="true">
+      <Shuffle size={17} />
+      <SkipBack fill="currentColor" size={24} />
+      <Pause fill="currentColor" size={32} />
+      <SkipForward fill="currentColor" size={24} />
+      <Repeat2 size={17} />
+    </div>
+  );
+}
+
 function Phone({ mood }: { mood: typeof heroTrack }) {
-  return <div className={`phone ${mood.color}`} aria-hidden="true">
-    <div className="phone-top"><span>9:41</span><div className="camera"/><span className="phone-status"><Wifi size={12}/><span className="battery"/></span></div>
-    <div className="phone-sheet"><span/><span className="tiny-caps">PLAYING FROM YOUR LIBRARY</span></div>
-    <Cover art={mood.art} className="phone-art" />
-    <div className="phone-song"><div><strong>{mood.title}</strong><span>Novo Amor</span></div><Heart size={21}/></div>
-    <div className="progress-track"><span/></div><div className="timestamps"><span>2:14</span><span>−1:00</span></div>
-    <Transport/>
-    <div className="volume"><Volume2 size={13}/><i/><Volume2 size={16}/></div>
-    <div className="phone-bottom"><ListMusic size={18}/><AudioLines size={20}/><MoreHorizontal size={21}/></div>
-    <div className="home-indicator"/>
-  </div>;
+  return (
+    <div className={`phone ${mood.color}`} aria-hidden="true">
+      <div className="phone-top">
+        <span>9:41</span>
+        <div className="camera" />
+        <span className="phone-status">
+          <Wifi size={12} />
+          <span className="battery" />
+        </span>
+      </div>
+      <div className="phone-sheet">
+        <span />
+        <span className="tiny-caps">PLAYING FROM YOUR LIBRARY</span>
+      </div>
+      <Cover art={mood.art} className="phone-art" />
+      <div className="phone-song">
+        <div>
+          <strong>{mood.title}</strong>
+          <span>Novo Amor</span>
+        </div>
+        <Heart size={21} />
+      </div>
+      <div className="progress-track"><span /></div>
+      <div className="timestamps">
+        <span>2:14</span>
+        <span>−1:00</span>
+      </div>
+      <Transport />
+      <div className="volume">
+        <Volume2 size={13} />
+        <i />
+        <Volume2 size={16} />
+      </div>
+      <div className="phone-bottom">
+        <ListMusic size={18} />
+        <AudioLines size={20} />
+        <MoreHorizontal size={21} />
+      </div>
+      <div className="home-indicator" />
+    </div>
+  );
 }
+
 function DesktopPreview() {
-  return <div className="desktop-window" aria-hidden="true">
-    <div className="window-bar"><span className="window-dots"><i/><i/><i/></span><span>Klyra</span><span className="window-actions">— &nbsp; □ &nbsp; ×</span></div>
-    <div className="desktop-body">
-      <aside className="mock-sidebar"><Brand/><span className="mock-search"><Search size={13}/> Search your music</span><span className="side-active"><House size={16}/> Home</span><span><Sparkles size={16}/> Explore</span><span><Library size={16}/> Library</span><small>YOUR COLLECTION</small><span><Heart size={16}/> Favorites</span><span><ListMusic size={16}/> The long way home</span><span><ListMusic size={16}/> After hours</span><span><ListMusic size={16}/> On repeat</span><div className="sidebar-note"><Mark/><span>Every song,<br/>a little closer.</span></div></aside>
-      <div className="mock-content"><div className="mock-toolbar"><div><ChevronLeft size={18}/><ChevronRight size={18}/></div><span className="mock-avatar"><Music2 size={14}/></span></div><small className="tiny-caps">A SOUNDTRACK FOR YOUR DAY</small><h3>Make yourself at home.</h3><div className="mock-banner"><div><span>YOUR NEXT FAVORITE FEELING</span><strong>The long<br/>way home.</strong><span className="mock-play"><Play size={12} fill="currentColor"/> Press play. Stay a while.</span></div><Cover art={keepMe.artwork}/></div><h4>A little more your kind of music <ChevronRight size={14}/></h4><div className="album-row">{covers.map(c=><div key={c.art}><Cover art={c.art}/><strong>{c.title}</strong><small>{c.subtitle}</small></div>)}</div></div>
-      <aside className="mock-queue"><div>Up next <ListMusic size={15}/></div><small>FROM YOUR LIBRARY</small>{covers.map((c,i)=><div className="queue-song" key={c.art}><Cover art={c.art}/><span><strong>{c.title}</strong><small>{c.subtitle}</small></span></div>)}</aside>
-    </div><div className="desktop-player"><div><Cover art={keepMe.artwork}/><span><strong>Keep Me</strong><small>Novo Amor</small></span><Heart size={16}/></div><div><Transport/><div className="desktop-progress"><span>1:24</span><i/><span>3:42</span></div></div><div><ListMusic size={17}/><Volume2 size={17}/><i/></div></div>
-  </div>;
+  return (
+    <div className="desktop-window" aria-hidden="true">
+      <div className="window-bar">
+        <span className="window-dots"><i /><i /><i /></span>
+        <span>Klyra</span>
+        <span className="window-actions">— &nbsp; □ &nbsp; ×</span>
+      </div>
+
+      <div className="desktop-body">
+        <aside className="mock-sidebar">
+          <Brand />
+          <span className="mock-search">
+            <Search size={13} /> Search your music
+          </span>
+          <span className="side-active">
+            <House size={16} /> Home
+          </span>
+          <span><Sparkles size={16} /> Explore</span>
+          <span><Library size={16} /> Library</span>
+          <small>YOUR COLLECTION</small>
+          <span><Heart size={16} /> Favorites</span>
+          <span><ListMusic size={16} /> The long way home</span>
+          <span><ListMusic size={16} /> After hours</span>
+          <span><ListMusic size={16} /> On repeat</span>
+          <div className="sidebar-note">
+            <Mark />
+            <span>Every song,<br />a little closer.</span>
+          </div>
+        </aside>
+
+        <div className="mock-content">
+          <div className="mock-toolbar">
+            <div>
+              <ChevronLeft size={18} />
+              <ChevronRight size={18} />
+            </div>
+            <span className="mock-avatar">
+              <Music2 size={14} />
+            </span>
+          </div>
+          <small className="tiny-caps">A SOUNDTRACK FOR YOUR DAY</small>
+          <h3>Make yourself at home.</h3>
+          <div className="mock-banner">
+            <div>
+              <span>YOUR NEXT FAVORITE FEELING</span>
+              <strong>The long<br />way home.</strong>
+              <span className="mock-play">
+                <Play size={12} fill="currentColor" />
+                Press play. Stay a while.
+              </span>
+            </div>
+            <Cover art={keepMe.artwork} />
+          </div>
+          <h4>
+            A little more your kind of music <ChevronRight size={14} />
+          </h4>
+          <div className="album-row">
+            {covers.map(c => (
+              <div key={c.art}>
+                <Cover art={c.art} />
+                <strong>{c.title}</strong>
+                <small>{c.subtitle}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <aside className="mock-queue">
+          <div>Up next <ListMusic size={15} /></div>
+          <small>FROM YOUR LIBRARY</small>
+          {covers.map(c => (
+            <div className="queue-song" key={c.art}>
+              <Cover art={c.art} />
+              <span>
+                <strong>{c.title}</strong>
+                <small>{c.subtitle}</small>
+              </span>
+            </div>
+          ))}
+        </aside>
+      </div>
+
+      <div className="desktop-player">
+        <div>
+          <Cover art={keepMe.artwork} />
+          <span>
+            <strong>Keep Me</strong>
+            <small>Novo Amor</small>
+          </span>
+          <Heart size={16} />
+        </div>
+        <div>
+          <Transport />
+          <div className="desktop-progress">
+            <span>1:24</span><i /><span>3:42</span>
+          </div>
+        </div>
+        <div>
+          <ListMusic size={17} />
+          <Volume2 size={17} />
+          <i />
+        </div>
+      </div>
+    </div>
+  );
 }
+
 const faqs = [
-  ["Which download should I choose?", "ARM64 is the best fit for most current Android phones and tablets. Choose Universal if you are unsure, ARM32 for an older compatible device, or x86-64 for a supported emulator. All Android builds require Android 8 or later. For a 64-bit Windows PC, download the Windows ZIP, extract the entire folder, and open Klyra.exe."],
-  ["Where does the music come from?", "Klyra uses a BitChord-derived, unofficial YouTube Music catalog and stream-resolution engine, alongside supported local music sources. BitChord is the source of part of the code, not the owner or licensor of the songs. Klyra is not affiliated with YouTube, Google, Apple, or Spotify."],
-  ["Is every song available for free?", "The Klyra app is free to download. That does not provide a music subscription or unrestricted rights to songs. Playback depends on the source, region, account and current provider compatibility. Unofficial integrations may stop working. Permanent availability, ad-free playback and unrestricted downloads are not guaranteed."],
-  ["Do I need an account?", "You can start with supported playback sources and local music. A Klyra account is used for account library and playlist synchronization, separate from any music-provider account. Cross-device sync depends on the configured service and has not been fully verified end to end on this release."],
-  ["Do all tracks have Live Lyrics?", "Lyrics depend on available provider metadata. Klyra uses line timing when it exists and word timing only when genuine timestamps are supplied. Some tracks have static lyrics or no lyrics. Translation and romanization also depend on the source."],
-  ["How do I update, and where is the source?", "Install the new APK over the existing app to keep its data. This release keeps the same package identity and signing certificate as the previous Klyra build. On Windows, close the app and extract the updated package to a separate folder. The exact corresponding GPLv3 app source and checksums are included below with the release files."],
+  [
+    "Which download should I choose?",
+    "ARM64 is the best fit for most current Android phones and tablets. Choose Universal if you are unsure, ARM32 for an older compatible device, or x86-64 for a supported emulator. All Android builds require Android 8 or later. For a 64-bit Windows PC, download the Windows ZIP, extract the entire folder, and open Klyra.exe."
+  ],
+  [
+    "Where does the music come from?",
+    "Klyra uses a BitChord-derived, unofficial YouTube Music catalog and stream-resolution engine, alongside supported local music sources. BitChord is the source of part of the code, not the owner or licensor of the songs. Klyra is not affiliated with YouTube, Google, Apple, or Spotify."
+  ],
+  [
+    "Is every song available for free?",
+    "The Klyra app is free to download. That does not provide a music subscription or unrestricted rights to songs. Playback depends on the source, region, account and current provider compatibility. Unofficial integrations may stop working. Permanent availability, ad-free playback and unrestricted downloads are not guaranteed."
+  ],
+  [
+    "Do I need an account?",
+    "You can start with supported playback sources and local music. A Klyra account is used for account library and playlist synchronization, separate from any music-provider account. Cross-device sync depends on the configured service and has not been fully verified end to end on this release."
+  ],
+  [
+    "Do all tracks have Live Lyrics?",
+    "Lyrics depend on available provider metadata. Klyra uses line timing when it exists and word timing only when genuine timestamps are supplied. Some tracks have static lyrics or no lyrics. Translation and romanization also depend on the source."
+  ],
+  [
+    "How do I update, and where is the source?",
+    "Install the new APK over the existing app to keep its data. This release keeps the same package identity and signing certificate as the previous Klyra build. On Windows, close the app and extract the updated package to a separate folder. The exact corresponding GPLv3 app source and checksums are included below with the release files."
+  ]
 ];
 
 export default function Landing() {
   const [menu, setMenu] = useState(false);
-  function playKeepMe() { setSessionActive(true); document.getElementById("keep-me-session")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); }
   const [android, setAndroid] = useState<AssetKey>("android");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(()=>()=>{if(timer.current) clearTimeout(timer.current);},[]);
-  async function copyHash() {
-    try { await navigator.clipboard.writeText(assets[android].sha256); setCopied(true); setCopyError(false); if(timer.current)clearTimeout(timer.current);timer.current=setTimeout(()=>setCopied(false),2500); }
-    catch { setCopyError(true); }
-  }
-  return <>
-    <a className="skip-link" href="#main">Skip to content</a>
-    <header className="site-header"><nav className="nav-shell" aria-label="Main navigation"><a href="#" aria-label="Klyra home"><Brand/></a><div className="nav-links"><a href="#experience">The experience</a><a href="#desktop">On desktop</a><a href="#questions">Good to know</a></div><a href="#download" className="nav-download">Get Klyra <ArrowDown size={14}/></a><button className="mobile-menu" aria-expanded={menu} aria-controls="mobile-nav" aria-label={menu ? "Close menu" : "Open menu"} onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button></nav>{menu&&<nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">{[["The experience","experience"],["On desktop","desktop"],["Downloads","download"],["Good to know","questions"]].map(([label,id])=><a key={id} href={`#${id}`} onClick={()=>setMenu(false)}>{label}<ArrowUpRight size={16}/></a>)}</nav>}</header>
-    <main id="main">
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-edition section-width"><span>MUSIC. ON YOUR TERMS.</span><span>ANDROID / WINDOWS</span></div>
-        <h1 id="hero-title" className="hero-wordmark">Klyra</h1>
-        <div className="hero-product section-width">
-          <div className="hero-editorial"><h2>Every song,<br/>{" "}a little closer.</h2><p>A native music app.<br/>{" "}A space for your entire taste.</p><a className="button hero-download" href="#download">Get Klyra <ArrowDownToLine size={17}/></a><a className="hero-explore" href="#experience">Explore the experience <ArrowDown size={14}/></a></div>
-          <div className="hero-device"><Phone mood={heroTrack}/></div>
-          <div className="hero-side-note"><span className="tiny-caps">01 / NOW PLAYING</span><div className="hero-rule"/><AudioLines size={28} strokeWidth={1}/><h3>Just you.<br/>And the music.</h3><p>Your player, lyrics and queue.<br/>One uninterrupted feeling.</p><span className="side-signature"><Mark/> Developed by Ryan</span></div>
-        </div>
-        <div className="hero-bottom section-width"><span>FOR THE LOVE OF LISTENING.</span><p>Player showcase · Keep Me by Novo Amor</p><a href="#download">Download v{release.version} <ArrowUpRight size={12}/></a></div>
-      </section>
-      <IntegrationRail/>
-      <section id="experience" className="experience section-width section-space"><div className="section-heading"><span className="eyebrow">01 — THE EXPERIENCE</span><h2>The details<br/>make the difference.</h2><p>Built around the music.<br/>Designed to get out of its way.</p></div><div className="experience-grid"><LyricMotionPreview/><div className="experience-copy"><span className="small-icon"><AudioLines/></span><h3>Don’t just listen.<br/>Feel every line.</h3><p>Follow the words as the music moves. Large, expressive lyrics and artwork-inspired colors bring you a little further into the song.</p><div className="detail-line"><Check/><span><strong>In time with your music.</strong> Synchronized lines when timing is available.</span></div><div className="detail-line"><Check/><span><strong>A mood of its own.</strong> Immersive backgrounds shaped by the artwork.</span></div><div className="detail-line"><Check/><span><strong>Always within reach.</strong> Your player, lyrics and queue, beautifully connected.</span></div><a className="text-link" href="#download">Meet your new music space <ArrowRight size={16}/></a><small>Lyric timing and availability vary by track and source.</small></div></div></section>
-      <MusicShelves/>
-      <section id="desktop" className="desktop-section section-space"><div className="section-width"><div className="desktop-heading"><div><span className="eyebrow">03 — ON YOUR DESKTOP</span><h2>At home.<br/>On your desktop.</h2></div><div><p>A proper Windows app for your desk, your speakers,<br className="desktop-break"/> and your one-more-song kind of evenings.</p><a className="text-link" href="/download/windows">Download for Windows <ArrowDownToLine size={16}/></a></div></div><DesktopPreview/><p className="illustration-note">Desktop interface illustration with real music metadata. Artwork belongs to the respective rights holders.</p><div className="desktop-points"><span><Monitor/>A dedicated desktop layout</span><span><ListMusic/>Your queue, close at hand</span><span><Volume2/>Native playback & media integration</span></div></div></section>
-      <section id="download" className="download-section section-width section-space"><div className="section-heading"><span className="eyebrow">04 — DOWNLOAD KLYRA</span><h2>Take Klyra with you.</h2><p>Same feeling. A screen that’s yours.</p></div><div className="release-badge"><span/> Version {release.version} <span className="dot-separator">·</span> {release.date}</div><div className="download-grid"><article className="download-card"><div className="download-card-top"><span className="os-icon"><Smartphone size={29}/></span><span className="tag">PHONES & TABLETS</span></div><h3>Klyra for Android</h3><p>Your music, wherever the day takes you.</p><label className="select-label" htmlFor="android-build">Choose your build</label><div className="select-wrap"><select id="android-build" value={android} onChange={e=>{setAndroid(e.target.value as AssetKey);setCopied(false);setCopyError(false);}}><option value="android">ARM64 — recommended for most phones</option><option value="universal">Universal — when you’re not sure</option><option value="arm32">ARM32 — older compatible devices</option><option value="emulator">x86-64 — emulator / compatible device</option></select><ChevronDown size={17}/></div><a href={`/download/${android}`} className="button button-dark download-button"><Download size={18}/> Download APK <span>{assets[android].size}</span></a><div className="download-meta"><span>Android 8.0+ · Build {release.code}</span><button aria-label="Copy selected Android APK SHA-256 checksum" onClick={copyHash}>{copied?<Check size={13}/>:<Copy size={13}/>} {copied?"Copied":"Checksum"}</button></div><span className="sr-only" role="status">{copied?"Checksum copied":""}</span>{copyError&&<p className="copy-fallback">Copy manually: <code>{assets[android].sha256}</code></p>}<p className="install-hint">Updating? Install over your existing app to keep your data.</p></article>
-        <article className="download-card windows-card"><div className="download-card-top"><span className="os-icon"><Monitor size={29}/></span><span className="tag">FOR YOUR DESK</span></div><h3>Klyra for Windows</h3><p>More space for the music you love.</p><div className="windows-spec"><span className="windows-mark"><i/><i/><i/><i/></span><div><strong>Windows · 64-bit</strong><span>Standalone desktop app · ZIP package</span></div><Check size={17}/></div><a href="/download/windows" className="button button-dark download-button"><Download size={18}/> Download for Windows <span>{assets.windows.size}</span></a><div className="download-meta"><span>x64 desktop package</span><a href="/download/checksums">Checksums <ArrowUpRight size={13}/></a></div><p className="install-hint">Extract the full ZIP, then open <strong>Klyra.exe</strong>.</p></article></div>
-        <details className="all-downloads"><summary>All downloads & open-source files <ChevronDown size={18}/></summary><div className="all-download-list">{(Object.entries(assets) as [AssetKey,typeof assets[AssetKey]][]).map(([key,a])=><a key={key} href={`/download/${key}`}><span>{a.label}</span><span>{a.size}<ArrowDownToLine size={15}/></span></a>)}</div></details><div className="release-note"><ShieldCheck size={21}/><p>Builds and Android signing were verified. This is a community build; device-specific behavior can vary. <a href="/verification.txt" target="_blank" rel="noreferrer">Read the verification notes <ArrowUpRight size={12}/></a></p></div></section>
-      <section id="questions" className="faq-section section-width"><div><span className="eyebrow">05 — GOOD TO KNOW</span><h2>Before you<br/> press play.</h2><CircleHelp size={30} strokeWidth={1.2}/></div><div className="faq-list">{faqs.map(([q,a])=><details key={q}><summary>{q}<span>+</span></summary><p>{a}</p></details>)}</div></section>
-      <section className="closing section-width"><Mark/><h2>For the love<br/>of listening.</h2><p>Made with care. Developed by Ryan.</p><a href="#download" className="button button-dark">Find your next favorite <ArrowRight size={17}/></a></section>
-    </main>
-    <footer className="site-footer section-width"><div className="footer-top"><a href="#" aria-label="Klyra home"><Brand/></a><span>Every song, a little closer.</span><div><a href="https://github.com/ryangalang" target="_blank" rel="noreferrer">Ryan on GitHub <ArrowUpRight size={13}/></a><a href="/download/source">App source</a><a href="/license.txt">GPLv3</a><a href="/privacy">Privacy</a></div></div><div className="footer-bottom"><p>Klyra is a modified GPLv3 derivative of <a href="https://github.com/kushagrasinghx/BitChord" target="_blank" rel="noreferrer">BitChord</a>. Original copyright and license notices are retained. Unofficial provider integrations are not endorsed by YouTube or Google and may change or stop working. Music availability and downloads depend on source permissions.</p><span>Developed by <strong>Ryan</strong><br/>© 2026 · Made for music.</span></div></footer>
-  </>;
-}
 
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+
+  async function copyHash() {
+    try {
+      await navigator.clipboard.writeText(assets[android].sha256);
+      setCopied(true);
+      setCopyError(false);
+
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopyError(true);
+    }
+  }
+
+  return (
+    <>
+      <a className="skip-link" href="#main">Skip to content</a>
+
+      <header className="site-header">
+        <nav className="nav-shell" aria-label="Main navigation">
+          <a href="#" aria-label="Klyra home"><Brand /></a>
+          <div className="nav-links">
+            <a href="#experience">The experience</a>
+            <a href="#desktop">On desktop</a>
+            <a href="#questions">Good to know</a>
+          </div>
+          <a href="#download" className="nav-download">
+            Get Klyra <ArrowDown size={14} />
+          </a>
+          <button
+            className="mobile-menu"
+            aria-expanded={menu}
+            aria-controls="mobile-nav"
+            aria-label={menu ? "Close menu" : "Open menu"}
+            onClick={() => setMenu(!menu)}
+          >
+            {menu ? <X /> : <Menu />}
+          </button>
+        </nav>
+
+        {menu && (
+          <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">
+            {[
+              ["The experience", "experience"],
+              ["On desktop", "desktop"],
+              ["Downloads", "download"],
+              ["Good to know", "questions"]
+            ].map(([label, id]) => (
+              <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>
+                {label}<ArrowUpRight size={16} />
+              </a>
+            ))}
+          </nav>
+        )}
+      </header>
+
+      <main id="main">
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-edition section-width">
+            <span>MUSIC. ON YOUR TERMS.</span>
+            <span>ANDROID / WINDOWS</span>
+          </div>
+
+          <h1 id="hero-title" className="hero-wordmark">Klyra</h1>
+
+          <div className="hero-product section-width">
+            <div className="hero-editorial">
+              <h2>Every song,<br />{" "}a little closer.</h2>
+              <p>A native music app.<br />{" "}A space for your entire taste.</p>
+              <a className="button hero-download" href="#download">
+                Get Klyra <ArrowDownToLine size={17} />
+              </a>
+              <a className="hero-explore" href="#experience">
+                Explore the experience <ArrowDown size={14} />
+              </a>
+            </div>
+
+            <div className="hero-device">
+              <Phone mood={heroTrack} />
+            </div>
+
+            <div className="hero-side-note">
+              <span className="tiny-caps">01 / NOW PLAYING</span>
+              <div className="hero-rule" />
+              <AudioLines size={28} strokeWidth={1} />
+              <h3>Just you.<br />And the music.</h3>
+              <p>Your player, lyrics and queue.<br />One uninterrupted feeling.</p>
+              <span className="side-signature">
+                <Mark /> Developed by Ryan
+              </span>
+            </div>
+          </div>
+
+          <div className="hero-bottom section-width">
+            <span>FOR THE LOVE OF LISTENING.</span>
+            <p>Player showcase · Keep Me by Novo Amor</p>
+            <a href="#download">
+              Download v{release.version} <ArrowUpRight size={12} />
+            </a>
+          </div>
+        </section>
+
+        <IntegrationRail />
+
+        <section
+          id="experience"
+          className="experience section-width section-space"
+        >
+          <div className="section-heading">
+            <span className="eyebrow">01 — THE EXPERIENCE</span>
+            <h2>The details<br />make the difference.</h2>
+            <p>Built around the music.<br />Designed to get out of its way.</p>
+          </div>
+
+          <div className="experience-grid">
+            <LyricMotionPreview />
+            <div className="experience-copy">
+              <span className="small-icon"><AudioLines /></span>
+              <h3>Don’t just listen.<br />Feel every line.</h3>
+              <p>
+                Follow the words as the music moves. Large, expressive
+                lyrics and artwork-inspired colors bring you a little
+                further into the song.
+              </p>
+              <div className="detail-line">
+                <Check />
+                <span>
+                  <strong>In time with your music.</strong> Synchronized
+                  lines when timing is available.
+                </span>
+              </div>
+              <div className="detail-line">
+                <Check />
+                <span>
+                  <strong>A mood of its own.</strong> Immersive backgrounds
+                  shaped by the artwork.
+                </span>
+              </div>
+              <div className="detail-line">
+                <Check />
+                <span>
+                  <strong>Always within reach.</strong> Your player,
+                  lyrics and queue, beautifully connected.
+                </span>
+              </div>
+              <a className="text-link" href="#download">
+                Meet your new music space <ArrowRight size={16} />
+              </a>
+              <small>Lyric timing and availability vary by track and source.</small>
+            </div>
+          </div>
+        </section>
+
+        <MusicShelves />
+
+        <section id="desktop" className="desktop-section section-space">
+          <div className="section-width">
+            <div className="desktop-heading">
+              <div>
+                <span className="eyebrow">03 — ON YOUR DESKTOP</span>
+                <h2>At home.<br />On your desktop.</h2>
+              </div>
+              <div>
+                <p>
+                  A proper Windows app for your desk, your speakers,
+                  <br className="desktop-break" /> and your
+                  one-more-song kind of evenings.
+                </p>
+                <a className="text-link" href="/download/windows">
+                  Download for Windows <ArrowDownToLine size={16} />
+                </a>
+              </div>
+            </div>
+
+            <DesktopPreview />
+
+            <p className="illustration-note">
+              Desktop interface illustration with real music metadata.
+              Artwork belongs to the respective rights holders.
+            </p>
+
+            <div className="desktop-points">
+              <span><Monitor />A dedicated desktop layout</span>
+              <span><ListMusic />Your queue, close at hand</span>
+              <span><Volume2 />Native playback & media integration</span>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="download"
+          className="download-section section-width section-space"
+        >
+          <div className="section-heading">
+            <span className="eyebrow">04 — DOWNLOAD KLYRA</span>
+            <h2>Take Klyra with you.</h2>
+            <p>Same feeling. A screen that’s yours.</p>
+          </div>
+
+          <div className="release-badge">
+            <span />
+            Version {release.version}
+            <span className="dot-separator">·</span>
+            {release.date}
+          </div>
+
+          <div className="download-grid">
+            <article className="download-card">
+              <div className="download-card-top">
+                <span className="os-icon"><Smartphone size={29} /></span>
+                <span className="tag">PHONES & TABLETS</span>
+              </div>
+
+              <h3>Klyra for Android</h3>
+              <p>Your music, wherever the day takes you.</p>
+
+              <label className="select-label" htmlFor="android-build">
+                Choose your build
+              </label>
+
+              <div className="select-wrap">
+                <select
+                  id="android-build"
+                  value={android}
+                  onChange={e => {
+                    setAndroid(e.target.value as AssetKey);
+                    setCopied(false);
+                    setCopyError(false);
+                  }}
+                >
+                  <option value="android">
+                    ARM64 — recommended for most phones
+                  </option>
+                  <option value="universal">
+                    Universal — when you’re not sure
+                  </option>
+                  <option value="arm32">
+                    ARM32 — older compatible devices
+                  </option>
+                  <option value="emulator">
+                    x86-64 — emulator / compatible device
+                  </option>
+                </select>
+                <ChevronDown size={17} />
+              </div>
+
+              <a
+                href={`/download/${android}`}
+                className="button button-dark download-button"
+              >
+                <Download size={18} />
+                Download APK
+                <span>{assets[android].size}</span>
+              </a>
+
+              <div className="download-meta">
+                <span>Android 8.0+ · Build {release.code}</span>
+                <button
+                  aria-label="Copy selected Android APK SHA-256 checksum"
+                  onClick={copyHash}
+                >
+                  {copied ? <Check size={13} /> : <Copy size={13} />}
+                  {copied ? "Copied" : "Checksum"}
+                </button>
+              </div>
+
+              <span className="sr-only" role="status">
+                {copied ? "Checksum copied" : ""}
+              </span>
+
+              {copyError && (
+                <p className="copy-fallback">
+                  Copy manually: <code>{assets[android].sha256}</code>
+                </p>
+              )}
+
+              <p className="install-hint">
+                Updating? Install over your existing app to keep your data.
+              </p>
+            </article>
+
+            <article className="download-card windows-card">
+              <div className="download-card-top">
+                <span className="os-icon"><Monitor size={29} /></span>
+                <span className="tag">FOR YOUR DESK</span>
+              </div>
+
+              <h3>Klyra for Windows</h3>
+              <p>More space for the music you love.</p>
+
+              <div className="windows-spec">
+                <span className="windows-mark"><i /><i /><i /><i /></span>
+                <div>
+                  <strong>Windows · 64-bit</strong>
+                  <span>Standalone desktop app · ZIP package</span>
+                </div>
+                <Check size={17} />
+              </div>
+
+              <a
+                href="/download/windows"
+                className="button button-dark download-button"
+              >
+                <Download size={18} />
+                Download for Windows
+                <span>{assets.windows.size}</span>
+              </a>
+
+              <div className="download-meta">
+                <span>x64 desktop package</span>
+                <a href="/download/checksums">
+                  Checksums <ArrowUpRight size={13} />
+                </a>
+              </div>
+
+              <p className="install-hint">
+                Extract the full ZIP, then open <strong>Klyra.exe</strong>.
+              </p>
+            </article>
+          </div>
+
+          <details className="all-downloads">
+            <summary>
+              All downloads & open-source files <ChevronDown size={18} />
+            </summary>
+            <div className="all-download-list">
+              {(Object.entries(assets) as [
+                AssetKey,
+                typeof assets[AssetKey]
+              ][]).map(([key, a]) => (
+                <a key={key} href={`/download/${key}`}>
+                  <span>{a.label}</span>
+                  <span>
+                    {a.size}<ArrowDownToLine size={15} />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </details>
+
+          <div className="release-note">
+            <ShieldCheck size={21} />
+            <p>
+              Builds and Android signing were verified. This is a
+              community build; device-specific behavior can vary.
+              {" "}
+              <a
+                href="/verification.txt"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Read the verification notes <ArrowUpRight size={12} />
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <section id="questions" className="faq-section section-width">
+          <div>
+            <span className="eyebrow">05 — GOOD TO KNOW</span>
+            <h2>Before you<br /> press play.</h2>
+            <CircleHelp size={30} strokeWidth={1.2} />
+          </div>
+
+          <div className="faq-list">
+            {faqs.map(([q, a]) => (
+              <details key={q}>
+                <summary>
+                  {q}<span>+</span>
+                </summary>
+                <p>{a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className="closing section-width">
+          <Mark />
+          <h2>For the love<br />of listening.</h2>
+          <p>Made with care. Developed by Ryan.</p>
+          <a href="#download" className="button button-dark">
+            Find your next favorite <ArrowRight size={17} />
+          </a>
+        </section>
+      </main>
+
+      <footer className="site-footer section-width">
+        <div className="footer-top">
+          <a href="#" aria-label="Klyra home"><Brand /></a>
+          <span>Every song, a little closer.</span>
+          <div>
+            <a
+              href="https://github.com/ryangalang"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ryan on GitHub <ArrowUpRight size={13} />
+            </a>
+            <a href="/download/source">App source</a>
+            <a href="/license.txt">GPLv3</a>
+            <a href="/privacy">Privacy</a>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <p>
+            Klyra is a modified GPLv3 derivative of{" "}
+            <a
+              href="https://github.com/kushagrasinghx/BitChord"
+              target="_blank"
+              rel="noreferrer"
+            >
+              BitChord
+            </a>.
+            Original copyright and license notices are retained.
+            Unofficial provider integrations are not endorsed by
+            YouTube or Google and may change or stop working.
+            Music availability and downloads depend on source permissions.
+          </p>
+          <span>
+            Developed by <strong>Ryan</strong>
+            <br />
+            © 2026 · Made for music.
+          </span>
+        </div>
+      </footer>
+    </>
+  );
+}
