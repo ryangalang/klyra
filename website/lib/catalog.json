@@ -1,0 +1,66 @@
+[
+  {
+    "title": "Keep Me",
+    "artist": "Novo Amor",
+    "album": "Cannot Be, Whatsoever",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/c1/bc/3d/c1bc3d50-89d1-a15b-2175-7d1b7b3dd502/cover.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/keep-me/1672226963?i=1672227943&uo=4",
+    "id": 1672227943
+  },
+  {
+    "title": "Here You Come, There You Go",
+    "artist": "Gracie Abrams",
+    "album": "Daughter from Hell (Deluxe)",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7f/01/45/7f01452e-2a1b-bad8-d2e1-bf7a51c82bec/26UM1IM32920.rgb.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/here-you-come-there-you-go/6827357170?i=6827357438&uo=4",
+    "id": 6827357438
+  },
+  {
+    "title": "The Girl Of Your Dreams",
+    "artist": "Ashe",
+    "album": "The Girl Of Your Dreams",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/1b/86/c9/1b86c988-03b8-ca21-10a5-0963d09f5bcf/075679561893.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/the-girl-of-your-dreams/6805240956?i=6805241185&uo=4",
+    "id": 6805241185
+  },
+  {
+    "title": "BIRDS OF A FEATHER",
+    "artist": "Billie Eilish",
+    "album": "HIT ME HARD AND SOFT",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/92/9f/69/929f69f1-9977-3a44-d674-11f70c852d1b/24UMGIM36186.rgb.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/birds-of-a-feather/1739659134?i=1739659142&uo=4",
+    "id": 1739659142
+  },
+  {
+    "title": "Pantropiko",
+    "artist": "BINI",
+    "album": "Pantropiko - Single",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/d7/9b/27/d79b27e0-d7b2-43b6-4c2c-763efd4287a4/197190409697.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/pantropiko/1716330565?i=1716330571&uo=4",
+    "id": 1716330571
+  },
+  {
+    "title": "Multo",
+    "artist": "Cup of Joe",
+    "album": "Multo - Single",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0b/e2/18/0be218a4-45ea-5c35-03f2-b0c2026e3504/cover.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/multo/1766905823?i=1766905828&uo=4",
+    "id": 1766905828
+  },
+  {
+    "title": "Glue Song",
+    "artist": "beabadoobee",
+    "album": "Glue Song - Single",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/76/6e/b6/766eb6e4-d746-00cf-7009-5d3719854f65/196922349447_Cover.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/glue-song/1667888596?i=1667888656&uo=4",
+    "id": 1667888656
+  },
+  {
+    "title": "From The Start",
+    "artist": "Laufey",
+    "album": "From The Start - Single",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/8b/8b/20/8b8b2083-c8a3-a1a6-1f9e-a4da5bf45d5d/197188679637.jpg/600x600bb.jpg",
+    "url": "https://music.apple.com/us/album/from-the-start/1682357010?i=1682357121&uo=4",
+    "id": 1682357121
+  }
+]

@@ -1,0 +1,4 @@
+Service icons from Simple Icons (https://simpleicons.org), distributed under CC0-1.0.
+The marks identify optional integrations present in the application source.
+Trademarks remain the property of their respective owners. No endorsement is implied.
+Spotify support describes import/matching, not licensed Spotify audio playback.
