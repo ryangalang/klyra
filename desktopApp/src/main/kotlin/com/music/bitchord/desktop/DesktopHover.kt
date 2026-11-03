@@ -6,6 +6,7 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -87,3 +88,16 @@ internal fun Modifier.desktopHoverWash(): Modifier = composed {
 }
 
 private const val WASH_MS = 120
+
+/** List rows acknowledge the pointer across their whole clipped shape, never with a circle. */
+@Composable
+internal fun Modifier.desktopRowHover(): Modifier = composed {
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val reduced by DesktopAppearanceSettings.reduceAnimation.collectAsState()
+    val wash by animateFloatAsState(if (hovered) 1f else 0f,
+        animationSpec = tween(if (reduced) 0 else WASH_MS), label = "rowHover")
+    this.hoverable(interaction).drawBehind {
+        if (wash > .01f) drawRect(androidx.compose.ui.graphics.Color.White.copy(alpha = .07f * wash))
+    }
+}

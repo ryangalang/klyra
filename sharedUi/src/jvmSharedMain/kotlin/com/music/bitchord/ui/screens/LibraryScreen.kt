@@ -85,6 +85,7 @@ fun LibraryScreen(
     onShelfItemLongPress: (ShelfItem) -> Unit,
     onNewPlaylist: () -> Unit,
     onImportSpotifyPlaylist: (() -> Unit)? = null,
+    onDownloadKlyraPlaylist: ((List<com.music.bitchord.data.model.Song>, String, String) -> Unit)? = null,
     /**
      * A shelf's "Show all" — every shelf's row here stops at five cards (see
      * [LibraryGridShelf]), so this is the only way to reach whatever didn't
@@ -141,7 +142,7 @@ fun LibraryScreen(
                 }
             }
             item(key = "replay") { replay() }
-            item(key = "klyra-library") { KlyraLibrarySection(onShelfItemClick) }
+            item(key = "klyra-library") { KlyraLibrarySection(onShelfItemClick, onDownloadKlyraPlaylist) }
             if (links.isNotEmpty()) {
                 item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
             }
@@ -310,6 +311,7 @@ private fun PlaylistShelf(
     onItemLongPress: (ShelfItem) -> Unit,
     onNewPlaylist: () -> Unit,
     onImportSpotifyPlaylist: (() -> Unit)? = null,
+    onDownloadKlyraPlaylist: ((List<com.music.bitchord.data.model.Song>, String, String) -> Unit)? = null,
     onShowAll: () -> Unit,
     pinnedPlaylists: List<String> = emptyList(),
 ) {

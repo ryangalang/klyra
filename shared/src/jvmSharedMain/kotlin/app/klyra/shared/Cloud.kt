@@ -28,9 +28,12 @@ class SupabaseClient(private val api: HttpApi, val url: String, private val publ
     suspend fun signIn(email: String, password: String): Session = lock.withLock {
         parse(auth("token?grant_type=password", buildJsonObject { put("email", email.trim()); put("password", password) })).also(::save)
     }
-    suspend fun signUp(email: String, password: String) {
+    /** True only when the server issued a usable session; otherwise email confirmation is required. */
+    suspend fun signUp(email: String, password: String): Boolean = lock.withLock {
         require(password.length >= 8) { "Use at least 8 characters for your password." }
-        auth("signup", buildJsonObject { put("email", email.trim()); put("password", password) })
+        val result = auth("signup", buildJsonObject { put("email", email.trim()); put("password", password) })
+        if (result.string("access_token").isBlank()) false
+        else { save(parse(result)); true }
     }
     suspend fun recover(email: String) { auth("recover?redirect_to=klyra%3A%2F%2Fauth%2Fcallback", buildJsonObject { put("email", email.trim()) }) }
     suspend fun resend(email: String) { auth("resend", buildJsonObject { put("type", "signup"); put("email", email.trim()) }) }

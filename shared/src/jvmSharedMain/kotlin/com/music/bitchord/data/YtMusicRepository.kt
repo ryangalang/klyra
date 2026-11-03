@@ -739,7 +739,11 @@ object YtMusicRepository {
      * nobody is watching — the library sync, an artist's back catalogue. For
      * anything a screen is waiting on, use [browseSongs] and [moreSongs].
      */
-    private suspend fun songsPaged(browseId: String): List<Song> {
+    suspend fun allSongsComplete(browseId: String): Result<List<Song>> = call("all-complete:$browseId") {
+        songsPaged(browseId, requireComplete = true)
+    }
+
+    private suspend fun songsPaged(browseId: String, requireComplete: Boolean = false): List<Song> {
         val out = LinkedHashMap<String, Song>()
         var response = Innertube.browse(browseId)
         if (browseId.startsWith("MPREb")) {
@@ -755,8 +759,13 @@ object YtMusicRepository {
             val shelf = InnertubeParser.parsePlaylistShelf(response)
             (shelf?.songs ?: InnertubeParser.collectSongsDeep(response)).forEach { out[it.videoId] = it }
             val token = shelf?.continuation ?: InnertubeParser.continuationToken(response)
-            if (token == null || page++ >= MAX_PAGES) break
-            response = runCatching { Innertube.browseContinuation(token) }.getOrNull() ?: break
+            if (token == null) break
+            if (page++ >= MAX_PAGES) {
+                check(!requireComplete) { "This playlist exceeds the provider page limit. No partial playlist was saved or queued." }
+                break
+            }
+            response = if (requireComplete) Innertube.browseContinuation(token)
+                else runCatching { Innertube.browseContinuation(token) }.getOrNull() ?: break
         }
         return out.values.toList()
     }

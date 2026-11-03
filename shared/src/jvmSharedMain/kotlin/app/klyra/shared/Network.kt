@@ -15,9 +15,8 @@ fun JsonObject.string(key: String): String = this[key]?.jsonPrimitive?.contentOr
 fun JsonObject.bool(key: String): Boolean = this[key]?.jsonPrimitive?.booleanOrNull ?: false
 fun JsonObject.number(key: String): Long = this[key]?.jsonPrimitive?.let { it.longOrNull ?: it.doubleOrNull?.toLong() } ?: 0
 
-class HttpApi {
-    val client = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS)
-        .callTimeout(45, TimeUnit.SECONDS).retryOnConnectionFailure(true).build()
+class HttpApi(val client: OkHttpClient = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(45, TimeUnit.SECONDS).retryOnConnectionFailure(true).build()) {
     suspend fun request(url: String, params: Map<String, String> = emptyMap(), method: String = "GET", body: JsonElement? = null, headers: Map<String, String> = emptyMap()): JsonElement = withContext(Dispatchers.IO) {
         val target = url.toHttpUrl().newBuilder().apply { params.forEach { (k,v) -> addQueryParameter(k,v) } }.build()
         val request = Request.Builder().url(target).header("User-Agent", "KLYRA/0.1 (native music client)").apply {

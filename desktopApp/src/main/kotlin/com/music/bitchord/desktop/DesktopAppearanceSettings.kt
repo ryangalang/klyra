@@ -16,6 +16,7 @@ internal object DesktopAppearanceSettings {
 
     private val _reduceAnimation = flag(KEY_REDUCE_ANIMATION, false)
     private val _reduceDynamicBlur = flag(KEY_REDUCE_DYNAMIC_BLUR, false)
+    private val _liquidGlass = flag(KEY_LIQUID_GLASS, false)
     private val _hideVolumeBar = flag(KEY_HIDE_VOLUME_BAR, false)
 
     /** Freezes the main player's gradient instead of drifting. */
@@ -23,6 +24,9 @@ internal object DesktopAppearanceSettings {
 
     /** Swaps frosted glass for solid fills across the app. */
     val reduceDynamicBlur: StateFlow<Boolean> = _reduceDynamicBlur
+
+    /** Android-inspired translucency on navigation and transport; never changes playback. */
+    val liquidGlass: StateFlow<Boolean> = _liquidGlass
 
     /** Removes the volume slider from the main player. */
     val hideVolumeBar: StateFlow<Boolean> = _hideVolumeBar
@@ -32,6 +36,8 @@ internal object DesktopAppearanceSettings {
     fun setReduceAnimation(value: Boolean) = write(KEY_REDUCE_ANIMATION, value, _reduceAnimation)
 
     fun setReduceDynamicBlur(value: Boolean) = write(KEY_REDUCE_DYNAMIC_BLUR, value, _reduceDynamicBlur)
+
+    fun setLiquidGlass(value: Boolean) = write(KEY_LIQUID_GLASS, value, _liquidGlass)
 
     fun setHideVolumeBar(value: Boolean) = write(KEY_HIDE_VOLUME_BAR, value, _hideVolumeBar)
 
@@ -43,5 +49,6 @@ internal object DesktopAppearanceSettings {
 
     internal const val KEY_REDUCE_ANIMATION = "reduce_animation"
     internal const val KEY_REDUCE_DYNAMIC_BLUR = "reduce_dynamic_blur"
+    internal const val KEY_LIQUID_GLASS = "liquid_glass"
     internal const val KEY_HIDE_VOLUME_BAR = "hide_volume_bar"
 }

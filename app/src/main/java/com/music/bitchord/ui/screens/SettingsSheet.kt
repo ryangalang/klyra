@@ -59,6 +59,7 @@ import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.LocalOffer
 import androidx.compose.material.icons.rounded.MusicOff
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MotionPhotosOff
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Person
@@ -741,6 +742,15 @@ fun SettingsScreen(
         }
 
         SearchableSettingsGroup(search, header = stringResource(R.string.appearance)) {
+            row("Immersive lock-screen player", "cover", "lock screen", "artwork") {
+                SettingsRow(
+                    icon = Icons.Rounded.Lock,
+                    title = "Immersive lock-screen player",
+                    subtitle = "Open before locking your phone. Large artwork and playback controls; your screen lock stays enabled. Android's normal lock-screen layout depends on your phone.",
+                    onClick = { context.startActivity(android.content.Intent(context, com.music.bitchord.LockScreenPlayerActivity::class.java)) },
+                )
+            }
+
             val themeTitle = stringResource(R.string.theme)
             row(themeTitle, "dark mode", "light mode") {
                 SettingsRow(icon = Icons.Rounded.Brightness4, title = themeTitle)

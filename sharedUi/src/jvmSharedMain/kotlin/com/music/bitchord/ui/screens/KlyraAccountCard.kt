@@ -19,12 +19,16 @@ fun KlyraAccountCard(modifier: Modifier = Modifier) {
     var emailLink by remember { mutableStateOf("") }
     var changePassword by remember { mutableStateOf(false) }
     var deleteConfirmation by remember { mutableStateOf(false) }
+    LaunchedEffect(state.confirmationEmail) {
+        state.confirmationEmail?.let { email = it; signUp = false }
+    }
     Surface(modifier.fillMaxWidth().padding(20.dp), shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Your Klyra account", style = MaterialTheme.typography.titleLarge)
-            Text("Your library, across Android and Windows. This is separate from your music provider account.",
+            Text("Sign in with the same Klyra account on both devices to sync Klyra favorites and playlists. Your YouTube Music library and local files are separate.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             if (!state.configured) {
                 Text("Cloud accounts are not configured in this build. Local music and provider playback remain available.")
             } else if (state.email == null) {
@@ -37,6 +41,8 @@ fun KlyraAccountCard(modifier: Modifier = Modifier) {
                 }, enabled = !state.busy && email.isNotBlank() && password.length >= 8) { Text(if (signUp) "Create account" else "Sign in") }
                 TextButton({ signUp = !signUp }, enabled = !state.busy) { Text(if (signUp) "Already have an account? Sign in" else "Create a Klyra account") }
                 TextButton({ KlyraAccount.recover(email) }, enabled = !state.busy && email.isNotBlank()) { Text("Forgot password") }
+                if (state.confirmationEmail != null) TextButton({ KlyraAccount.resendConfirmation(email) }, enabled = !state.busy && email.isNotBlank()) { Text("Resend confirmation email") }
+                if (signUp) Text("Use at least 8 characters. After creating your account, confirm your email before signing in.", style = MaterialTheme.typography.bodySmall)
                 TextButton({ verify = !verify }, enabled = !state.busy) { Text("Verify email link") }
                 if (verify) {
                     Text("Copy the confirmation or recovery link from your Klyra email before opening it. Paste it here to finish in the app.", style = MaterialTheme.typography.bodySmall)
@@ -45,6 +51,8 @@ fun KlyraAccountCard(modifier: Modifier = Modifier) {
                 }
             } else {
                 Text(state.email.orEmpty(), style = MaterialTheme.typography.titleMedium)
+                Text(if (state.lastSyncedAt == null) "No successful sync in this session yet." else "Last synced: " + java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(state.lastSyncedAt!!)), style = MaterialTheme.typography.bodySmall)
+                Text("Cloud changes refresh every minute while Klyra is running. Use Sync library to refresh now.", style = MaterialTheme.typography.bodySmall)
                 Text("${state.records.count { it.kind == "playlist" }} playlists · ${state.records.count { it.kind == "like" }} favorites")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button({ KlyraAccount.sync() }, enabled = !state.busy) { Text("Sync library") }
@@ -64,7 +72,6 @@ fun KlyraAccountCard(modifier: Modifier = Modifier) {
                 TextButton({ KlyraAccount.resolveConflicts(false) }, enabled = !state.busy) { Text("Use cloud versions") }
             }
             if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            state.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
         }
     }
     if (deleteConfirmation) AlertDialog(onDismissRequest = { deleteConfirmation = false },

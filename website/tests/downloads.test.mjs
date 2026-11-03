@@ -4,13 +4,13 @@ import { stat, open, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
-// Integration checks against a running local preview and the actual v29 artifacts.
+// Integration checks against a running local preview and the actual release artifacts.
 const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
-const directory = process.env.KLYRA_LOCAL_RELEASE_DIR || resolve('../../artifacts/Klyra-v29-2026-10-29');
+const directory = process.env.KLYRA_LOCAL_RELEASE_DIR || resolve('../../artifacts/Klyra-v32-2026-11-02');
 const files = {
   android: 'Klyra-Android-arm64.apk', universal: 'Klyra-Android-universal.apk',
   arm32: 'Klyra-Android-arm32.apk', emulator: 'Klyra-Android-x64-emulator.apk',
-  windows: 'Klyra-Windows-x64.zip', source: 'Klyra-corresponding-source.zip', checksums: 'SHA256SUMS.txt',
+  windows: 'Klyra-Windows-x64-setup.exe', source: 'Klyra-corresponding-source.zip', checksums: 'SHA256SUMS.txt',
 };
 for (const [key, file] of Object.entries(files)) {
   test(`${key}: attachment headers and resumable bytes match actual release file`, async () => {
@@ -38,7 +38,7 @@ test('complete APK HTTP body matches the published SHA-256 checksum', async () =
   assert.equal(response.status, 200);
   const hash = createHash('sha256');
   for await (const chunk of response.body) hash.update(chunk);
-  assert.equal(hash.digest('hex'), '9dfed8f724c3b9c51c9c6e6bbe2d2ec0570979f19a98cd2e30e4614b7ba45e93');
+  assert.equal(hash.digest('hex'), '01cd6bf52b500c3e9047f1f58fbdea4e7f35283de90f003096705ace9b8fa8bb');
 });
 test('checksum download matches the release manifest byte-for-byte', async () => {
   const response = await fetch(`${base}/download/checksums`);

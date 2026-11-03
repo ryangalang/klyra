@@ -16,7 +16,7 @@ npm run dev
 Open http://127.0.0.1:3000. For local downloads, set this in ignored `.env.local`:
 
 ```dotenv
-KLYRA_LOCAL_RELEASE_DIR=C:/app projects/music/artifacts/Klyra-v29-2026-10-29
+KLYRA_LOCAL_RELEASE_DIR=C:/app projects/music/artifacts/Klyra-v32-2026-11-02
 ```
 
 The download handler streams only the seven allowlisted release files and supports
@@ -45,24 +45,26 @@ the actual file. No GitHub repository page is shown in the normal download flow.
 GitHub Releases stores the large binaries; Vercel serves the small website and
 redirects the browser directly to the selected release asset.
 
-Create a public GitHub Release with the exact tag **v1.8-klyra.4**, then upload:
+Create a public GitHub Release with the exact tag **v1.8-klyra.7**, then upload:
 
 - Klyra-Android-arm64.apk
 - Klyra-Android-universal.apk
 - Klyra-Android-arm32.apk
 - Klyra-Android-x64-emulator.apk
-- Klyra-Windows-x64.zip
+- Klyra-Windows-x64-setup.exe
 - Klyra-corresponding-source.zip
 - SHA256SUMS.txt
 
-These verified files are in `../../artifacts/Klyra-v29-2026-10-29/` in Ryan's local
+These verified files are in `../../artifacts/Klyra-v32-2026-11-02/` in Ryan's local
 workspace. Also include LICENSE and the supplied verification/build notes in the
 release. Do not upload binaries into the normal Git source history.
 
 The code repo may remain private, but public downloads need a publicly readable
 release host. Hiding a repository link on the landing page does not change GitHub
-asset permissions. No repository visibility was changed by this task. The current
-public availability of `ryangalang/klyra` and its release has not been confirmed.
+asset permissions. No repository visibility was changed by this task. The repository is public;
+v1.8-klyra.7 was published on November 3, 2026 with all 12 approved assets.
+The public latest-release feed and every uploaded asset's size and SHA-256 digest
+were verified. Redeploy this website to Vercel to use its updated download manifest.
 Until a public release is published, deployed buttons show an honest availability
 page instead of silently redirecting to a missing file. GitHub responses are
 cached for up to five minutes. A private GitHub token is deliberately not shipped
@@ -95,7 +97,11 @@ at the new tag. Rebuild/redeploy the website. Keep previous releases available.
 - Original code-native interface and album-art illustrations; not device screenshots
   or a claim that illustrative tracks are available in the provider catalog.
 - System fonts only; no redistributed Apple fonts. Reduced-motion preference honored.
-- No analytics, signup form, ad pixels or marketing cookies on this website.
+- Vercel Web Analytics is included. No signup form or advertising pixels. See /privacy.
 - App provenance: a modified BitChord GPLv3 derivative. Matching app source is a
   separate download. Website modifications in this repository are under GPLv3;
   retain LICENSE and upstream notices where applicable.
+
+The November 2 bundle targets Android 1.8-klyra.7 (build 30) and Windows
+1.8-klyra.7 (native package 1.8.32). Windows uses a per-user Setup EXE.
+The portable ZIP remains an optional release asset. The lyric card uses original demonstration text, not Novo Amor lyrics.

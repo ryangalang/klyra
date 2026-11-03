@@ -24,7 +24,7 @@ async function respond(request: NextRequest, { params }: { params: Promise<{ ass
       const end = match?.[2] ? Number(match[2]) : info.size - 1;
       if (range && (!match || start > end || end >= info.size)) return new NextResponse(null, { status: 416, headers: { "Content-Range": `bytes */${info.size}` } });
       const headers: Record<string, string> = {
-        "Content-Type": file.endsWith(".apk") ? "application/vnd.android.package-archive" : file.endsWith(".zip") ? "application/zip" : "text/plain; charset=utf-8",
+        "Content-Type": file.endsWith(".apk") ? "application/vnd.android.package-archive" : file.endsWith(".zip") ? "application/zip" : file.endsWith(".exe") ? "application/vnd.microsoft.portable-executable" : "text/plain; charset=utf-8",
         "Content-Disposition": `attachment; filename="${file}"`,
         "Content-Length": String(end - start + 1), "Accept-Ranges": "bytes", "Cache-Control": "no-store",
       };

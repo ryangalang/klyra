@@ -221,7 +221,7 @@ function DesktopPreview() {
 const faqs = [
   [
     "Which download should I choose?",
-    "ARM64 is the best fit for most current Android phones and tablets. Choose Universal if you are unsure, ARM32 for an older compatible device, or x86-64 for a supported emulator. All Android builds require Android 8 or later. For a 64-bit Windows PC, download the Windows ZIP, extract the entire folder, and open Klyra.exe."
+    "ARM64 is the best fit for most current Android phones and tablets. Choose Universal if you are unsure, ARM32 for an older compatible device, or x86-64 for a supported emulator. All Android builds require Android 8 or later. For a 64-bit Windows PC, download the Windows installer and follow Setup."
   ],
   [
     "Where does the music come from?",
@@ -241,7 +241,7 @@ const faqs = [
   ],
   [
     "How do I update, and where is the source?",
-    "Install the new APK over the existing app to keep its data. This release keeps the same package identity and signing certificate as the previous Klyra build. On Windows, close the app and extract the updated package to a separate folder. The exact corresponding GPLv3 app source and checksums are included below with the release files."
+    "Install the new APK over the existing app to keep its data. This release keeps the same package identity and signing certificate as the previous Klyra build. On Windows, run the new installer. After this one-time upgrade, Klyra can notify you when a newer published release is available. The exact corresponding GPLv3 app source and checksums are included below with the release files."
   ]
 ];
 
@@ -352,7 +352,7 @@ export default function Landing() {
             <span>FOR THE LOVE OF LISTENING.</span>
             <p>Player showcase · Keep Me by Novo Amor</p>
             <a href="#download">
-              Download v{release.version} <ArrowUpRight size={12} />
+              Download Klyra <ArrowUpRight size={12} />
             </a>
           </div>
         </section>
@@ -456,7 +456,7 @@ export default function Landing() {
 
           <div className="release-badge">
             <span />
-            Version {release.version}
+            Latest downloads
             <span className="dot-separator">·</span>
             {release.date}
           </div>
@@ -511,7 +511,7 @@ export default function Landing() {
               </a>
 
               <div className="download-meta">
-                <span>Android 8.0+ · Build {release.code}</span>
+                <span>Android 8.0+ · v{release.androidVersion}</span>
                 <button
                   aria-label="Copy selected Android APK SHA-256 checksum"
                   onClick={copyHash}
@@ -549,7 +549,7 @@ export default function Landing() {
                 <span className="windows-mark"><i /><i /><i /><i /></span>
                 <div>
                   <strong>Windows · 64-bit</strong>
-                  <span>Standalone desktop app · ZIP package</span>
+                  <span>Standalone desktop app · Windows installer</span>
                 </div>
                 <Check size={17} />
               </div>
@@ -564,17 +564,29 @@ export default function Landing() {
               </a>
 
               <div className="download-meta">
-                <span>x64 desktop package</span>
+                <span>x64 · v{release.version}</span>
                 <a href="/download/checksums">
                   Checksums <ArrowUpRight size={13} />
                 </a>
               </div>
 
               <p className="install-hint">
-                Extract the full ZIP, then open <strong>Klyra.exe</strong>.
+                Open the installer and follow <strong>Windows Setup</strong>.
               </p>
             </article>
           </div>
+
+          <details className="all-downloads" open>
+            <summary>
+              New in Klyra {release.version} <ChevronDown size={18} />
+            </summary>
+            <div className="release-changes">
+              <p><strong>Your playlists, ready to go.</strong> Save a playlist to your Klyra library or queue its supported tracks for download, right beside Play.</p>
+              <p><strong>Updates inside Klyra.</strong> Get a notice when a newer release is available, then download and install it. Install this version once to get started.</p>
+              <p><strong>A cover screen for Android.</strong> Open the immersive player in Settings → Appearance before locking your phone. Large artwork and music controls, with your screen lock still enabled. Appearance on the system lock screen varies by phone.</p>
+              <p><strong>A quieter desktop.</strong> The sidebar sign-in card is gone. Find your account, email confirmation and sync status in Settings.</p>
+            </div>
+          </details>
 
           <details className="all-downloads">
             <summary>

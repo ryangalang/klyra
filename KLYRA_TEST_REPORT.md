@@ -1,3 +1,82 @@
+# Klyra 1.8-klyra.7 verification — November 2, 2026
+
+- Final Android assemble including the cover screen passed in 14m 21s
+  (`klyra-lockscreen-apk-build.log`). The packaged manifest includes the non-exported
+  cover Activity. All four APK signatures and versions were verified again afterward.
+- All four built Android APKs report version 1.8-klyra.7 / code 30, package
+  `app.klyra.foundation.preview`, and display label Klyra. APK signature verification
+  passed with the same existing certificate SHA-256:
+  `f79b1e7e917220537fb3db803edff25203fcd959ef1d0bd40bff06490c55dc82`.
+- Windows `packageExe` completed successfully (`klyra-lockscreen-compile.log`,
+  4m 28s). The Setup EXE reports file version 1.8.32. Its application image was
+  launched: catalog loaded, maximized layout rendered, compact navigation expanded,
+  and a real playlist displayed visible Save and Download buttons. The sidebar
+  account card was absent. Bulk downloading the user's personal playlist was not run.
+  Installing/upgrading Windows Setup itself and a real newer-release update cycle
+  remain untested.
+- Android and desktop Kotlin compilation passed in `klyra-update-compile.log`.
+- 16 focused JVM regression tests passed: signup/sign-in responses (4), library
+  conflict/merge behavior (5), release version/ABI selection and file integrity (7).
+  Auth tests use intercepted HTTP fixtures; they do not prove live cross-device sync.
+- Signup distinguishes an issued session from email confirmation. Confirmation
+  instructions and resend are visible in Settings. Sync refreshes each minute while
+  the process is alive and shows the last successful exchange. The sidebar sign-in
+  card has been removed entirely; account controls remain in Settings.
+- Playlist headers expose Save and Download controls. The complete provider list is
+  collected before saving or queuing; a failed continuation or the 10-page safety
+  limit reports an error rather than silently saving a partial playlist. Existing
+  Android/Windows queues retain duplicate suppression, progress and failure states.
+- Klyra-saved playlists offer Download for supported YouTube-source tracks. Other
+  sources are explicitly excluded. Provider availability and permission to download
+  are not guaranteed; no claim of unrestricted or officially supported YouTube
+  offline access is made.
+- The updater uses only Klyra's GitHub release feed and verifies asset size/SHA-256.
+  Android additionally checks application ID, increasing version code and the installed
+  signing certificate. Windows opens the verified per-user Setup EXE on user action.
+  Checking occurs at launch and every six hours while running, not while fully closed.
+- A published non-prerelease release is needed for update notices. Older installed
+  builds without this feed need this version installed manually once. Future updates
+  still require the normal Android/Windows install confirmation.
+- The existing Android lint analyzer emits Kotlin metadata compatibility diagnostics;
+  this is not a clean lint certification. AGP also warns about the configured compile SDK.
+- Android adds a user-opened, non-exported music-only cover Activity using the
+  existing MediaController. It does not unlock, wake or keep the device awake and
+  does not auto-launch from the background. Motion and polling stop when not resumed.
+  No physical keyguard/rendering check is claimed; device-specific behavior remains
+  unverified. It is not iOS-style animated artwork inside Android System UI.
+- ADB reported no attached device. Android installation, notification/lock-screen/
+  Bluetooth behavior and real cross-device account synchronization were not tested
+  on hardware in this session. No user password was entered or confirmation email sent.
+
+## Historical verification (earlier builds)
+
+## Windows sidebar and Liquid Glass - November 1, 2026
+
+- Windows 1.8-klyra.6 / native package 1.8.31 compiled successfully. Two native
+  caption tests passed, including DWM acceptance of dark/light caption colors.
+- The rebuilt app was launched and its dark native caption, full sidebar,
+  artwork playlist rows and current catalog were visually observed.
+- Liquid Glass is an optional persisted setting under Settings > Appearance.
+  The player samples scrolling content through Haze; the navigation has a soft
+  directional rim. Reduce dynamic blur takes precedence and uses opaque fills.
+  This is a desktop adaptation, not the Android-only refraction shader.
+- A single sidebar-panel button toggles full navigation and the compact icon rail. Extra X,
+  chevron and Show sidebar controls were removed. Previously saved hidden mode
+  falls back to automatic sizing. A native UI check observed the full sidebar,
+  clicked the menu and verified the settled compact rail and wider content
+  before the final icon refinement.
+  The reverse action was interrupted by user input and is not claimed as tested.
+- Navigation switches to a compact rail below 1160 dp. Side panels use 300 dp
+  below 1200 dp and 360 dp above. Minimum size remains 900 x 600 dp.
+- Player/lyrics screens were seen running with artwork and an advancing playhead.
+  Audible output, Bluetooth, native media shortcuts and cross-device sync were
+  not retested for this UI change. Both full and narrower layouts were observed.
+  Interactive glass-toggle testing was limited by concurrent user input.
+- The pinned Klyra account row opens the existing shared Supabase account form.
+  Provider sign-in now explains that it is separate from Klyra sync. No credentials
+  were entered and no new live authentication or sync verification is claimed.
+- Android APKs remain exactly version 1.8-klyra.4 / code 29; hashes are unchanged.
+
 # KLYRA build verification
 
 This is a test build, not a certification of complete production readiness.

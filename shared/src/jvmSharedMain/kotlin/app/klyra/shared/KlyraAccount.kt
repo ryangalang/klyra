@@ -6,6 +6,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -21,6 +24,8 @@ data class KlyraAccountState(
     val records: List<CloudRecord> = emptyList(),
     val conflicts: Set<String> = emptySet(),
     val recovery: Boolean = false,
+    val confirmationEmail: String? = null,
+    val lastSyncedAt: Long? = null,
 )
 
 /** Original KLYRA Supabase protocol, isolated from the music provider's Google session. */
@@ -35,6 +40,9 @@ object KlyraAccount {
     private var library = Library()
     private var conflicts = emptySet<String>()
     private var recovery = false
+    private var confirmationEmail: String? = null
+    private var lastSyncedAt: Long? = null
+    private var refreshJob: Job? = null
 
     fun install(url: String, key: String, secrets: SecretStore, files: File) {
         require(!key.startsWith("sb_secret_")) { "Use a Supabase public/publishable key, never a secret key" }
@@ -47,6 +55,18 @@ object KlyraAccount {
         cloud = SupabaseClient(HttpApi(), url.trim(), key.trim(), secrets)
         library = read()
         publish()
+        refreshJob?.cancel()
+        refreshJob = scope.launch {
+            while (isActive) {
+                mutex.withLock {
+                    if (cloud?.session != null) {
+                        val result = runCatching { syncNow() }
+                        publish(result.exceptionOrNull()?.let { "Sync could not finish: ${it.message}" })
+                    }
+                }
+                delay(60_000)
+            }
+        }
     }
 
     private fun file(): File {
@@ -66,7 +86,7 @@ object KlyraAccount {
     }
     private fun publish(message: String? = null) {
         mutable.value = KlyraAccountState(cloud?.configured == true, cloud?.session?.email,
-            message = message, records = library.records.filterNot { it.deleted }, conflicts = conflicts, recovery = recovery)
+            message = message, records = library.records.filterNot { it.deleted }, conflicts = conflicts, recovery = recovery, confirmationEmail = confirmationEmail, lastSyncedAt = lastSyncedAt)
     }
     private fun action(block: suspend () -> String?) { scope.launch {
         mutex.withLock {
@@ -77,19 +97,35 @@ object KlyraAccount {
     } }
     fun signIn(email: String, password: String) = action {
         checkNotNull(cloud).signIn(email, password)
+        confirmationEmail = null
+        lastSyncedAt = null
         library = read() // Never combine guest/another user's records automatically.
         conflicts = emptySet()
         recovery = false
         syncNow()
     }
     fun signUp(email: String, password: String) = action {
-        checkNotNull(cloud).signUp(email, password); "Check your email to confirm your KLYRA account."
+        if (checkNotNull(cloud).signUp(email, password)) {
+            confirmationEmail = null; lastSyncedAt = null
+            library = read(); conflicts = emptySet(); recovery = false
+            syncNow()
+        } else {
+            confirmationEmail = email.trim()
+            "Check your inbox and spam folder. Confirm your email, then return here and choose Sign in. If you already have an account, sign in instead."
+        }
+    }
+    fun resendConfirmation(email: String) = action {
+        checkNotNull(cloud).resend(email)
+        confirmationEmail = email.trim()
+        "Confirmation email requested. Check your inbox and spam folder before trying again."
     }
     fun recover(email: String) = action {
         checkNotNull(cloud).recover(email); "Copy the recovery link from your email and paste it into Verify email link below."
     }
     fun verifyEmailLink(link: String, email: String) = action {
         recovery = checkNotNull(cloud).verifyEmailLink(link, email)
+        confirmationEmail = null
+        lastSyncedAt = null
         library = read()
         conflicts = emptySet()
         if (recovery) "Email verified. Choose a new password below." else syncNow()
@@ -105,7 +141,7 @@ object KlyraAccount {
         "Your KLYRA account and cloud library were deleted."
     }
     fun signOut() = action {
-        try { checkNotNull(cloud).signOut() } finally { library = read(); conflicts = emptySet(); recovery = false }
+        try { checkNotNull(cloud).signOut() } finally { library = read(); conflicts = emptySet(); recovery = false; lastSyncedAt = null; confirmationEmail = null }
         "Signed out. Your cloud library remains in your account."
     }
     fun sync() = action { syncNow() }
@@ -128,6 +164,7 @@ object KlyraAccount {
         library = Library(merged.records, merged.pending)
         conflicts = merged.conflicts
         save()
+        lastSyncedAt = System.currentTimeMillis()
         return if (conflicts.isEmpty()) "Library synced." else "${conflicts.size} edits conflict with another device. Choose which version to keep."
     }
     fun resolveConflicts(keepLocal: Boolean) = action {

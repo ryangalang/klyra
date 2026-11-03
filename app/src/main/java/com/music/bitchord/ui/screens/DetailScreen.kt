@@ -266,6 +266,8 @@ fun DetailScreen(
      * Null on the pages with no list to act on.
      */
     onMore: ((List<Song>) -> Unit)? = null,
+    onDownloadPlaylist: (() -> Unit)? = null,
+    onSavePlaylist: (() -> Unit)? = null,
     /**
      * Saves this release to the account's library, or takes it out —
      * [DetailPage.library] says which way round. Null hides the control
@@ -466,6 +468,8 @@ fun DetailScreen(
                             }
                         },
                         onMore = onMore,
+                        onDownloadPlaylist = onDownloadPlaylist,
+                        onSavePlaylist = onSavePlaylist,
                         onArtistClick = onArtistClick,
                         onToggleLibrary = onToggleLibrary,
                     )
@@ -743,6 +747,8 @@ private fun ReleaseHeader(
     searching: Boolean,
     onSearch: () -> Unit,
     onMore: ((List<Song>) -> Unit)?,
+    onDownloadPlaylist: (() -> Unit)?,
+    onSavePlaylist: (() -> Unit)?,
     onArtistClick: (String, String) -> Unit,
     onToggleLibrary: (() -> Unit)?,
 ) {
@@ -817,20 +823,20 @@ private fun ReleaseHeader(
             if (songs.isNotEmpty()) {
                 // Only where YouTube said the release can be saved and the
                 // caller is willing to take the write — see [onToggleLibrary].
-                val library = page.library?.takeIf { onToggleLibrary != null }
+                val library = page.library?.takeIf { onToggleLibrary != null && onSavePlaylist == null }
                 // All release actions are circles. On a 360dp screen a full
                 // five-control row comes down 4dp so it stays inside the shared
                 // header gutter instead of running off the edge.
-                val circles = listOfNotNull(library, onMore).size + 2 // + Shuffle, Search
+                val circles = listOfNotNull(library, onMore, onDownloadPlaylist, onSavePlaylist).size + 2 // + Shuffle, Search
                 val full = circles >= 4
-                val circleSize = if (full) 46.dp else 50.dp
+                val circleSize = if (circles >= 5) 40.dp else if (full) 46.dp else 50.dp
                 Spacer(Modifier.height(14.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = HEADER_GUTTER),
                     horizontalArrangement = Arrangement.spacedBy(
-                        if (full) 8.dp else 10.dp,
+                        if (circles >= 5) 6.dp else if (full) 8.dp else 10.dp,
                         Alignment.CenterHorizontally,
                     ),
                     verticalAlignment = Alignment.CenterVertically,
@@ -864,11 +870,23 @@ private fun ReleaseHeader(
                         iconOnly = true,
                         size = circleSize,
                     )
-                    // Where the download circle used to be. Downloading a
-                    // release is a thing done once and then not thought about;
-                    // finding a track on a long playlist is a thing done while
-                    // reading the page, so it is the one that earns a button and
-                    // the download moved to the overflow beside it.
+                    onSavePlaylist?.let { save ->
+                        val libraryState by app.klyra.shared.KlyraAccount.state.collectAsStateWithLifecycle()
+                        val saved = libraryState.records.any { it.id == "playlist:saved:" + page.browseId }
+                        CircleIconButton(icon = if (saved) BitChordIcons.Check else BitChordIcons.Plus, contentDescription = if (saved) "Update saved playlist" else "Save playlist to Klyra library",
+                            palette = palette, onClick = save, size = circleSize)
+                    }
+                    onDownloadPlaylist?.let { download ->
+                        val saved by com.music.bitchord.download.Downloads.saved.collectAsStateWithLifecycle()
+                        val active by com.music.bitchord.download.Downloads.active.collectAsStateWithLifecycle()
+                        val requested by com.music.bitchord.download.Downloads.requested.collectAsStateWithLifecycle()
+                        val ids = requested[page.browseId].orEmpty()
+                        val complete = ids.isNotEmpty() && ids.all { it in saved }
+                        val waiting = ids.any { active[it] is com.music.bitchord.download.DownloadState.Queued || active[it] is com.music.bitchord.download.DownloadState.Running }
+                        CircleIconButton(icon = if (waiting) BitChordIcons.Clock else if (complete) BitChordIcons.Check else BitChordIcons.Download,
+                            contentDescription = if (waiting) "Downloading playlist" else if (complete) "Playlist downloaded" else "Download playlist",
+                            palette = palette, onClick = download, size = circleSize)
+                    }
                     CircleIconButton(
                         icon = if (searching) Icons.Rounded.Close else BitChordIcons.Search,
                         contentDescription = stringResource(

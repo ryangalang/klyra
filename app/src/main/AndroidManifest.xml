@@ -104,6 +104,9 @@
           uiMode is deliberately *not* in the list: a day/night change should
           still recreate the Activity so the theme is rebuilt from resources.
         -->
+        <activity android:name=".LockScreenPlayerActivity"
+            android:exported="false" android:excludeFromRecents="true"
+            android:theme="@style/Theme.BitChord" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

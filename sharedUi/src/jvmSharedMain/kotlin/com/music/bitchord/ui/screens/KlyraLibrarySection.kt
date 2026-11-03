@@ -12,7 +12,7 @@ import com.music.bitchord.data.model.ShelfItem
 import java.util.UUID
 
 @Composable
-fun KlyraLibrarySection(onPlay: (ShelfItem) -> Unit) {
+fun KlyraLibrarySection(onPlay: (ShelfItem) -> Unit, onDownload: ((List<com.music.bitchord.data.model.Song>, String, String) -> Unit)? = null) {
     val state by KlyraAccount.state.collectAsState()
     val tracks = remember(state.records) { state.records.filter { it.kind == "track" }.mapNotNull { runCatching { JsonCodec.decodeFromString<Track>(it.payload) }.getOrNull() }.associateBy { it.id } }
     val favorites = state.records.filter { it.kind == "like" }.mapNotNull { tracks[it.payload] }
@@ -37,9 +37,19 @@ fun KlyraLibrarySection(onPlay: (ShelfItem) -> Unit) {
             TextButton({ opened = if (opened == playlist.id) null else playlist.id }) { Text("${playlist.name} · ${playlist.trackIds.size} songs") }
             if (opened == playlist.id) {
                 Row {
+                    onDownload?.let { download ->
+                        val eligible = playlist.trackIds.mapNotNull(tracks::get).filter { it.source == Source.YOUTUBE }
+                        TextButton(onClick = { download(eligible.map { com.music.bitchord.data.model.Song(videoId = it.sourceId, title = it.title,
+                            artist = it.artist, thumbnailUrl = it.artwork, albumName = it.album) }, playlist.id, playlist.name) }, enabled = eligible.isNotEmpty()) {
+                            Icon(com.music.bitchord.ui.icons.BitChordIcons.Download, null, Modifier.size(20.dp))
+                            Spacer(Modifier.width(6.dp)); Text("Download")
+                        }
+                    }
                     TextButton({ rename = playlist; newName = playlist.name }) { Text("Rename") }
                     TextButton({ remove = playlist }) { Text("Delete playlist") }
                 }
+                val unavailable = playlist.trackIds.count { tracks[it]?.source != Source.YOUTUBE }
+                if (unavailable > 0) Text("$unavailable tracks need their original source and are not included in this download.", style = MaterialTheme.typography.bodySmall)
                 if (playlist.trackIds.isEmpty()) Text("Add songs from Favorites below.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 playlist.trackIds.mapNotNull(tracks::get).forEach { track ->
                 KlyraTrackRow(track, onPlay) {

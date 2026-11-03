@@ -327,8 +327,8 @@ import org.jetbrains.compose.resources.painterResource
  */
 internal val DesktopPageGutter = PAGE_GUTTER
 
-internal val DesktopBackground = Color(0xFF111113)
-internal val DesktopSurface = Color(0xFF0D0D0F)
+internal val DesktopBackground = com.music.bitchord.ui.theme.klyraColors(dark = true).background
+internal val DesktopSurface = com.music.bitchord.ui.theme.klyraColors(dark = true).surface
 private val DesktopSurfaceRaised = Color(0xFF1C1C1E)
 internal val DesktopGlass = Color(0x661C1C1E)
 internal val DesktopGlassStrong = Color(0xCC0D0D0F)
@@ -368,7 +368,7 @@ internal fun desktopSwitchColors() = SwitchDefaults.colors(
     uncheckedThumbColor = Color.White.copy(alpha = 0.35f),
     uncheckedBorderColor = Color.Transparent,
 )
-internal val DesktopSecondary = Color(0xFF8E8E93)
+internal val DesktopSecondary = com.music.bitchord.ui.theme.klyraColors(dark = true).onSurfaceVariant
 internal val DesktopDivider = Color(0xFF2C2C2E)
 private const val STATS_SAMPLE_MS = 5_000L
 
@@ -434,7 +434,7 @@ internal fun desktopTypography(): Typography {
     )
 }
 
-private enum class DesktopDestination(val id: String, val label: String) {
+internal enum class DesktopDestination(val id: String, val label: String) {
     LISTEN_NOW("listen-now", "Home"),
     EXPLORE("explore", "Explore"),
     LIBRARY("library", "Library"),
@@ -476,30 +476,13 @@ fun BitChordDesktopApp() {
     var personalPlayingStash by remember { mutableStateOf(false) }
     val persistence = remember { DesktopPersistence() }
     var availableUpdate by remember { mutableStateOf<DesktopUpdateChecker.UpdateInfo?>(null) }
-    LaunchedEffect(Unit) { availableUpdate = DesktopUpdateChecker.check() }
-    availableUpdate?.let { update ->
-        AlertDialog(
-            onDismissRequest = { availableUpdate = null },
-            title = { Text(DesktopStrings["d_update_available", "Update available"]) },
-            text = {
-                Text(
-                    "Klyra ${update.version} is out — you have ${DesktopUpdateChecker.currentVersion}." +
-                        (update.notes?.takeIf { it.isNotBlank() }?.let { "\n\n${it.take(600)}" } ?: ""),
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    DesktopExternalLinks.open(update.downloadUrl ?: update.releaseUrl)
-                    availableUpdate = null
-                }) { Text(DesktopStrings["d_download", "Download"]) }
-            },
-            dismissButton = {
-                TextButton(onClick = { availableUpdate = null }) {
-                    Text(DesktopStrings["d_later", "Later"])
-                }
-            },
-        )
+    LaunchedEffect(Unit) {
+        while (true) {
+            DesktopUpdateChecker.check()?.let { availableUpdate = it }
+            kotlinx.coroutines.delay(6 * 60 * 60 * 1000L)
+        }
     }
+    availableUpdate?.let { update -> DesktopUpdateDialog(update) { availableUpdate = null } }
     var destination by remember { mutableStateOf(DesktopDestination.LISTEN_NOW) }
     var query by remember { mutableStateOf("") }
     var searchFilter by remember { mutableStateOf(SearchFilter.ALL) }
@@ -584,7 +567,7 @@ fun BitChordDesktopApp() {
     var downloads by remember { mutableStateOf(persistence.downloads()) }
     var localSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
     val downloadQueue by DesktopDownloadQueue.active.collectAsState()
-    val downloadInProgress = downloadQueue.keys
+    val downloadInProgress = downloadQueue.filterValues { it.state !is DesktopDownloadState.Failed }.keys
     var playlists by remember { mutableStateOf(persistence.playlists()) }
     var statsRevision by remember { mutableStateOf(0L) }
     var replayPeriod by remember { mutableStateOf(DesktopReplayPeriod.ALL_TIME) }
@@ -1105,12 +1088,41 @@ fun BitChordDesktopApp() {
         }
     }
 
-    /** Everything on a page, in the order it is listed. */
+    suspend fun completeCollection(collection: DesktopCollection): List<Song> {
+        if (collection.browseId.startsWith("VL") || collection.browseId.startsWith("MPRE"))
+            return com.music.bitchord.data.YtMusicRepository.allSongsComplete(collection.browseId).getOrThrow()
+        val all = collection.songs.toMutableList()
+        var token = collection.continuation
+        val seen = mutableSetOf<String>()
+        while (token != null) {
+            check(seen.add(token!!)) { "Provider repeated a playlist page. Please try again." }
+            val (nextSongs, next) = DesktopSearchClient.moreCollectionSongs(token!!, all.firstOrNull()?.artist).getOrThrow()
+            all += nextSongs; token = next
+        }
+        return all.distinctBy(Song::videoId)
+    }
     fun downloadAll(songs: List<Song>) {
-        val have = downloads.map(Song::videoId).toSet()
-        DesktopDownloadQueue.enqueueAll(
-            songs.filterNot { it.videoId in have || it.localPath != null },
-        )
+        val collection = openedCollection
+        scope.launch {
+            runCatching {
+                val all = if (collection != null) completeCollection(collection) else songs
+                val have = downloads.map(Song::videoId).toSet()
+                val missing = all.filterNot { it.videoId in have || it.localPath != null }
+                DesktopDownloadQueue.enqueueAll(missing)
+                if (openedCollection?.browseId == collection?.browseId && collection != null)
+                    openedCollection = collection.copy(songs = all, continuation = null)
+                DesktopPlayerHost.showMessage("${missing.size} tracks queued. See Downloads for progress and unavailable tracks.")
+            }.onFailure { DesktopPlayerHost.showMessage("Playlist download could not start: ${it.message}") }
+        }
+    }
+    fun saveOpenCollection() {
+        val collection = openedCollection ?: return
+        scope.launch { runCatching {
+            val tracks = completeCollection(collection).map { it.klyraTrack() }
+            app.klyra.shared.KlyraAccount.savePlaylist(app.klyra.shared.Playlist("saved:" + collection.browseId, collection.title,
+                trackIds = tracks.map { it.id }, cover = collection.thumbnailUrl), tracks)
+            DesktopPlayerHost.showMessage("Saving playlist to your Klyra library…")
+        }.onFailure { DesktopPlayerHost.showMessage("Could not save playlist: ${it.message}") } }
     }
 
     /** Keeps a station queued ahead of whatever is playing. */
@@ -2826,6 +2838,7 @@ fun BitChordDesktopApp() {
         colorScheme = desktopColorScheme(),
         typography = desktopTypography(),
     ) {
+        DesktopNativeCaption(DesktopBackground, MaterialTheme.colorScheme.onBackground)
         CompositionLocalProvider(
             LocalContentColor provides Color.White,
             LocalNowPlaying provides selectedSong,
@@ -2931,8 +2944,9 @@ fun BitChordDesktopApp() {
                         onBack = ::goBack,
                     )
                 },
-                sidebar = {
+                sidebar = { compact ->
                     DesktopSidebar(
+                        compact = compact,
                         destination = destination,
                         settingsOpen = overlays.settingsPage != null,
                         accountPlaylists = sidebarAccountPlaylists,
@@ -2966,9 +2980,10 @@ fun BitChordDesktopApp() {
                         onNext = ::playNext,
                     )
                 },
-                trailing = {
+                trailing = { panelWidth ->
                     val current = selectedSong
                     DesktopSidePanelColumn(
+                        width = panelWidth,
                         panel = overlays.sidePanel.takeIf { current != null },
                         onClose = { overlays.sidePanel = null },
                     ) { which ->
@@ -3665,6 +3680,7 @@ fun BitChordDesktopApp() {
                                 playSongs(songs.shuffled(), 0, openedCollection?.let { collectionSource(it) })
                             },
                             onDownloadAll = ::downloadAll,
+                            onSavePlaylist = ::saveOpenCollection,
                             animatedCanvas = animatedCanvas,
                             onToggleLike = { song ->
                                 toggleLike(song)
@@ -3826,6 +3842,10 @@ fun BitChordDesktopApp() {
                             )
                         }
                         destination == DesktopDestination.LIBRARY -> LibraryScreen(
+                            onDownloadKlyraPlaylist = { songs, _, _ ->
+                                DesktopDownloadQueue.enqueueAll(songs.filterNot { song -> downloads.any { it.videoId == song.videoId } || song.localPath != null })
+                                DesktopPlayerHost.showMessage("Playlist queued. Open Downloads for progress.")
+                            },
                             signedIn = youtubeSignedIn,
                             state = libraryState,
                             listState = libraryListState,
@@ -3930,7 +3950,13 @@ private fun DesktopTopBar(
 ) {
     var scrub by remember { mutableStateOf<Float?>(null) }
     fun time(value: Long): String = "%d:%02d".format(value / 60_000, value / 1000 % 60)
-    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 18.dp, vertical = 10.dp)) {
+    val liquidGlass by DesktopAppearanceSettings.liquidGlass.collectAsState()
+    val playerShape = RoundedCornerShape(20.dp)
+    Column(Modifier.fillMaxWidth()
+        .then(if (liquidGlass) Modifier.padding(start = 8.dp, end = 12.dp, bottom = 12.dp)
+            .clip(playerShape).desktopBarGlass(playerShape)
+        else Modifier.background(MaterialTheme.colorScheme.surface))
+        .padding(horizontal = 18.dp, vertical = 10.dp)) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -4013,182 +4039,6 @@ internal fun DesktopToolbarButton(
         contentAlignment = Alignment.Center,
     ) {
         content()
-    }
-}
-
-@Composable
-private fun DesktopSidebar(
-    destination: DesktopDestination,
-    settingsOpen: Boolean,
-    accountPlaylists: List<ShelfItem>,
-    localPlaylists: List<DesktopPlaylist>,
-    openedCollectionId: String?,
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onDestinationSelected: (DesktopDestination) -> Unit,
-    onOpenAccountPlaylist: (ShelfItem) -> Unit,
-    onOpenLocalPlaylist: (DesktopPlaylist) -> Unit,
-    onOpenSettings: () -> Unit,
-    /** Search was picked: the sidebar's box is the page's field, so it takes the focus. */
-    focusSearch: Boolean,
-    onSearchFocused: () -> Unit,
-) {
-    val searchFocusRequester = remember { FocusRequester() }
-    LaunchedEffect(focusSearch) {
-        if (focusSearch) {
-            runCatching { searchFocusRequester.requestFocus() }
-            onSearchFocused()
-        }
-    }
-    val windowInfo = LocalWindowInfo.current
-    var searchFocused by remember { mutableStateOf(false) }
-    var restoreSearchFocus by remember { mutableStateOf(false) }
-
-    LaunchedEffect(windowInfo.isWindowFocused) {
-        if (!windowInfo.isWindowFocused) {
-            restoreSearchFocus = searchFocused
-        } else if (restoreSearchFocus) {
-            // Let the desktop window finish its activation before asking Compose to put the native
-            // text input target back in focus.
-            yield()
-            searchFocusRequester.requestFocus()
-            restoreSearchFocus = false
-        }
-    }
-
-    val titleBarEnabled by DesktopTitleBarSetting.enabled.collectAsState()
-    val inlineCaption = DesktopPlatform.drawsOwnWindowFrame && !titleBarEnabled
-    Box(
-        Modifier
-            .width(220.dp)
-            .fillMaxHeight()
-            .desktopWindowGlass(DesktopChromeEdge.END, fade = 0.07f),
-    ) {
-        Column(Modifier.fillMaxSize()) {
-            // The sidebar runs to the top of the window, so its head is the window's caption: the
-            // three buttons, and room to take hold of the window by.
-            if (inlineCaption) {
-                DesktopTitleBarDragArea(Modifier.fillMaxWidth().height(SIDEBAR_CAPTION_HEIGHT)) {
-                    Box(Modifier.fillMaxSize().padding(start = 10.dp), contentAlignment = Alignment.CenterStart) {
-                        DesktopWindowButtons()
-                    }
-                }
-            }
-        Column(
-            Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = if (inlineCaption) 4.dp else 16.dp, bottom = 16.dp),
-        ) {
-            DesktopSearchField(
-                query = query,
-                onQueryChange = onQueryChange,
-                onSearch = onSearch,
-                focusRequester = searchFocusRequester,
-                onFocusChanged = { searchFocused = it },
-            )
-            Spacer(Modifier.height(20.dp))
-            DesktopSidebarItem(BitChordIcons.Home, DesktopStrings["home", "Home"], destination == DesktopDestination.LISTEN_NOW) {
-                onDestinationSelected(DesktopDestination.LISTEN_NOW)
-            }
-            DesktopSidebarItem(BitChordIcons.Explore, "Explore", destination == DesktopDestination.EXPLORE) {
-                onDestinationSelected(DesktopDestination.EXPLORE)
-            }
-            DesktopSidebarItem(BitChordIcons.Library, "Library", destination == DesktopDestination.LIBRARY) {
-                onDestinationSelected(DesktopDestination.LIBRARY)
-            }
-            DesktopSidebarItem(BitChordIcons.Search, "Search", destination == DesktopDestination.SEARCH) {
-                onDestinationSelected(DesktopDestination.SEARCH)
-            }
-            Spacer(Modifier.height(6.dp))
-            HorizontalDivider(color = desktopChromeDivider())
-            Spacer(Modifier.height(12.dp))
-            DesktopSidebarItem(BitChordIcons.Clock, "History", destination == DesktopDestination.HISTORY) {
-                onDestinationSelected(DesktopDestination.HISTORY)
-            }
-            val queued by DesktopDownloadQueue.active.collectAsState()
-            DesktopSidebarItem(
-                BitChordIcons.Download,
-                if (queued.isEmpty()) "Downloads" else "Downloads · ${queued.size}",
-                destination == DesktopDestination.DOWNLOADS,
-            ) {
-                onDestinationSelected(DesktopDestination.DOWNLOADS)
-            }
-            DesktopSidebarItem(BitChordIcons.Library, "Local Music", destination == DesktopDestination.LOCAL_MUSIC) {
-                onDestinationSelected(DesktopDestination.LOCAL_MUSIC)
-            }
-            Spacer(Modifier.height(6.dp))
-            HorizontalDivider(color = desktopChromeDivider())
-            Spacer(Modifier.height(12.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                contentPadding = PaddingValues(bottom = 8.dp),
-            ) {
-                items(accountPlaylists, key = { "account:${it.browseId}" }) { playlist ->
-                    DesktopSidebarItem(
-                        Icons.AutoMirrored.Rounded.PlaylistPlay,
-                        playlist.title,
-                        openedCollectionId == playlist.browseId,
-                    ) { onOpenAccountPlaylist(playlist) }
-                }
-                items(localPlaylists, key = { "local:${it.id}" }) { playlist ->
-                    DesktopSidebarItem(
-                        Icons.AutoMirrored.Rounded.PlaylistPlay,
-                        playlist.title,
-                        openedCollectionId == playlist.id,
-                    ) { onOpenLocalPlaylist(playlist) }
-                }
-                if (accountPlaylists.isEmpty() && localPlaylists.isEmpty()) {
-                    item {
-                        Text(
-                            "Your playlists will appear here",
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
-                            color = DesktopSecondary.copy(alpha = 0.68f),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
-            }
-            HorizontalDivider(color = desktopChromeDivider())
-            Spacer(Modifier.height(8.dp))
-            DesktopSidebarItem(Icons.Rounded.Settings, "Settings", settingsOpen) {
-                onOpenSettings()
-            }
-        }
-        }
-        Box(
-            Modifier
-                .align(Alignment.CenterEnd)
-                .width(1.dp)
-                .fillMaxHeight()
-                .background(desktopChromeDivider()),
-        )
-    }
-}
-
-@Composable
-private fun DesktopSidebarItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(7.dp))
-            .background(if (selected) Color.White.copy(alpha = 0.12f) else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 9.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, label, tint = if (selected) DesktopAccent else DesktopSecondary, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(10.dp))
-        Text(
-            label,
-            color = if (selected) Color.White else DesktopSecondary,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -4371,10 +4221,10 @@ private fun DesktopFrame(
     /** Receives true when its solid base should be left clear for the system material. */
     backdrop: @Composable (transparentBase: Boolean) -> Unit,
     topBar: @Composable (Boolean) -> Unit,
-    sidebar: @Composable () -> Unit,
+    sidebar: @Composable (compact: Boolean) -> Unit,
     bottomBar: @Composable (Boolean) -> Unit,
     /** The column on the far side of the page — the lyrics or the queue, when one is open. */
-    trailing: @Composable () -> Unit = {},
+    trailing: @Composable (width: Dp) -> Unit = {},
     overlay: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -4385,7 +4235,9 @@ private fun DesktopFrame(
     // gray ground.
     val material by DesktopWindowBackdrop.active.collectAsState()
     val appBackground by DesktopWindowBackdrop.appBackground.collectAsState()
+    val liquidGlass by DesktopAppearanceSettings.liquidGlass.collectAsState()
     val glass = material != DesktopBackdrop.OFF
+    val sidebarMode by DesktopSidebarSettings.mode.collectAsState()
     val materialBehindApp = glass && appBackground
     CompositionLocalProvider(LocalDesktopHaze provides haze) {
         Box(modifier.fillMaxSize().then(if (glass) Modifier else Modifier.background(containerColor))) {
@@ -4398,13 +4250,17 @@ private fun DesktopFrame(
                 DesktopTitleBar()
                 Box(Modifier.fillMaxWidth().weight(1f)) {
                     BoxWithConstraints(Modifier.fillMaxSize()) {
-                        val compact = maxWidth < 980.dp
+                        val compact = maxWidth < 1160.dp
+                        val sidebarCompact = sidebarMode == DesktopSidebarMode.COLLAPSED ||
+                            (sidebarMode == DesktopSidebarMode.AUTO && compact)
+                        val panelWidth = if (maxWidth < 1200.dp) 300.dp else 360.dp
                         // The sidebar runs the full height of the window, its head the window's
                         // caption; the player's bar and the page share the column beside it.
                         Row(Modifier.fillMaxSize()) {
-                            if (!compact) sidebar()
+                            sidebar(sidebarCompact)
                             Column(Modifier.weight(1f).fillMaxHeight()) {
-                            Row(Modifier.fillMaxWidth().weight(1f)) {
+                            Box(Modifier.fillMaxWidth().weight(1f)) {
+                            Row(Modifier.fillMaxSize()) {
                                 Box(
                                     Modifier
                                         .weight(1f)
@@ -4425,12 +4281,9 @@ private fun DesktopFrame(
                                                 end = 0.dp,
                                                 // Room for the bar that floats over this, so the
                                                 // last row can still be scrolled clear of it.
-                                                bottom = if (compact) 80.dp else 24.dp,
+                                                bottom = if (liquidGlass) 152.dp else 24.dp,
                                             ),
                                         )
-                                    }
-                                    if (compact) {
-                                        Box(Modifier.align(Alignment.BottomCenter)) { bottomBar(true) }
                                     }
                                 }
                                 Box(
@@ -4443,10 +4296,12 @@ private fun DesktopFrame(
                                                 Modifier
                                             },
                                         ),
-                                ) { trailing() }
+                                ) { Box(Modifier.padding(bottom = if (liquidGlass) 132.dp else 0.dp)) { trailing(panelWidth) } }
                             }
-                            // Klyra's persistent transport stays below the scrollable content.
-                            topBar(compact)
+                            // Glass samples the real scrolling page, with enough inset to reach its last row.
+                            if (liquidGlass) Box(Modifier.align(Alignment.BottomCenter)) { topBar(compact) }
+                            }
+                            if (!liquidGlass) topBar(compact)
                             }
                         }
                     }
@@ -5442,11 +5297,24 @@ private fun DesktopSettingsScreen(
             if (section == DesktopSettingsSection.APPEARANCE) item {
                 SettingsGroup(DesktopStrings["appearance", "Appearance"]) {
                     val reduceDynamicBlur by DesktopAppearanceSettings.reduceDynamicBlur.collectAsState()
+                    val liquidGlass by DesktopAppearanceSettings.liquidGlass.collectAsState()
+                    val reduceAnimation by DesktopAppearanceSettings.reduceAnimation.collectAsState()
+                    SettingsToggle(
+                        "Liquid Glass",
+                        if (reduceDynamicBlur) "Saved preference; Reduce dynamic blur currently uses solid surfaces"
+                        else "Translucent navigation and player with soft highlights, inspired by Klyra on Android",
+                        liquidGlass,
+                        DesktopAppearanceSettings::setLiquidGlass,
+                    )
                     SettingsToggle(
                         DesktopStrings["reduce_dynamic_blur", "Reduce dynamic blur"],
                         DesktopStrings["reduce_dynamic_blur_subtitle", "Swaps frosted glass for solid fills across the app"],
                         reduceDynamicBlur,
                         DesktopAppearanceSettings::setReduceDynamicBlur,
+                    )
+                    SettingsToggle(
+                        "Reduce motion", "Keep artwork backgrounds still and shorten panel transitions",
+                        reduceAnimation, DesktopAppearanceSettings::setReduceAnimation,
                     )
                     // Window furniture belongs beside the visual settings it changes, rather than
                     // interrupting playback controls. These rows remain Windows-only.
@@ -6071,6 +5939,7 @@ private fun DesktopCollectionPage(
     onPlaySongs: (List<Song>, Int) -> Unit,
     onShuffle: (List<Song>) -> Unit,
     onDownloadAll: (List<Song>) -> Unit,
+    onSavePlaylist: () -> Unit,
     animatedCanvas: Boolean,
     onToggleLike: (Song) -> Unit,
     onDownload: (Song) -> Unit,
@@ -6207,6 +6076,17 @@ private fun DesktopCollectionPage(
                                     if (!searching) listQuery = ""
                                 },
                             )
+                            if (collection.type == BrowseType.PLAYLIST) {
+                                val libraryState by app.klyra.shared.KlyraAccount.state.collectAsState()
+                                val saved = libraryState.records.any { it.id == "playlist:saved:" + collection.browseId }
+                                DesktopCircleButton(if (saved) BitChordIcons.Check else BitChordIcons.Plus,
+                                    if (saved) "Update saved playlist" else "Save playlist to Klyra library", onClick = onSavePlaylist)
+                            }
+                            val complete = collection.continuation == null && songs.isNotEmpty() && songs.all { it.videoId in downloadedIds || it.localPath != null }
+                            val downloading = songs.any { it.videoId in downloadInProgress }
+                            DesktopCircleButton(if (downloading) BitChordIcons.Clock else if (complete) BitChordIcons.Check else BitChordIcons.Download,
+                                if (downloading) "Downloading playlist" else if (complete) "Playlist downloaded" else "Download playlist",
+                                onClick = { onDownloadAll(songs) })
                             Box {
                                 DesktopCircleButton(Icons.Rounded.MoreHoriz, DesktopStrings["more", "More"], onClick = { moreOpen = true })
                                 DropdownMenu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
@@ -6441,8 +6321,14 @@ private fun Song.isNowPlaying(): Boolean = isSameTrackAs(LocalNowPlaying.current
 
 /** The frosted pane the floating bars are made of. */
 @Composable
-internal fun Modifier.desktopBarGlass(shape: Shape): Modifier =
-    desktopFrosted(DesktopBarGlass, tintAlpha = 0.55f).border(0.5.dp, DesktopBarEdge, shape)
+internal fun Modifier.desktopBarGlass(shape: Shape): Modifier {
+    val liquid by DesktopAppearanceSettings.liquidGlass.collectAsState()
+    val reduced by DesktopAppearanceSettings.reduceDynamicBlur.collectAsState()
+    val edge = if (liquid && !reduced) Brush.linearGradient(listOf(
+        Color.White.copy(alpha = .28f), Color.White.copy(alpha = .04f), Color.White.copy(alpha = .12f),
+    )) else SolidColor(DesktopBarEdge)
+    return desktopFrosted(DesktopBarGlass, tintAlpha = 0.55f).border(0.5.dp, edge, shape)
+}
 
 /** The edge of a chrome pane that meets the page, and so has to dissolve into it. */
 internal enum class DesktopChromeEdge { NONE, BOTTOM, END }
@@ -6509,19 +6395,20 @@ private fun Modifier.desktopFrosted(
 ): Modifier {
     val haze = LocalDesktopHaze.current
     val reduceDynamicBlur by DesktopAppearanceSettings.reduceDynamicBlur.collectAsState()
+    val liquidGlass by DesktopAppearanceSettings.liquidGlass.collectAsState()
     if (haze == null || reduceDynamicBlur) {
-        return this.background(edge.dissolve(opaque, fade) ?: SolidColor(opaque))
+        return this.background(edge.dissolve(opaque.copy(alpha = 1f), fade) ?: SolidColor(opaque.copy(alpha = 1f)))
     }
     val dissolve = edge.dissolve(Color.Black, fade)
     return this.hazeEffect(state = haze) {
         // Spelled out rather than taken from a preset.
         blurEnabled = true
         backgroundColor = DesktopSurface
-        blurRadius = 30.dp
+        blurRadius = if (liquidGlass) 16.dp else 30.dp
         // Dark enough that white text on the pane always wins, translucent enough that the
         // colour of what is behind it still comes through.
-        tints = listOf(HazeTint(DesktopSurface.copy(alpha = tintAlpha)))
-        noiseFactor = 0.04f
+        tints = listOf(HazeTint(DesktopSurface.copy(alpha = if (liquidGlass) .4f else tintAlpha)))
+        noiseFactor = if (liquidGlass) .015f else .04f
         // Assigned either way: the scope belongs to the node and outlives the draw, so a pane that
         // stops dissolving — the leading stretch of the top bar, when the window grows back out of
         // compact — would otherwise keep the mask it was given in the other layout.

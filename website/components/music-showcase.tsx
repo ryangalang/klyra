@@ -44,7 +44,7 @@ export function LyricMotionPreview() {
   const activeLine = Math.min(demoLines.length - 1, Math.floor(position / 4));
   return <div className={`lyric-motion-card${reducedMotion ? " reduce-motion" : ""}`} ref={card} aria-label="Silent animated lyrics preview using original demo text">
     <img className="lyric-motion-backdrop" src="/art/afterglow.svg" alt=""/>
-    <div className="lyric-motion-header"><img src="/art/afterglow.svg" alt="" width="52" height="52"/><div><strong>Closer to the light</strong><span>Klyra Sessions · motion preview</span></div><AudioLines size={25}/></div>
+    <div className="lyric-motion-header"><img src="/art/afterglow.svg" alt="Afterglow — original demo cover art" width="56" height="56"/><div><strong>Closer to the light</strong><span>Klyra Sessions</span><small>Afterglow · Demo album</small></div><AudioLines size={25}/></div>
     <div className="motion-lines" aria-label="Sample lyric lines">{demoLines.map((line,index) => {
       const distance=index-activeLine;
       return <button key={index} className={`motion-line${distance===0?" is-current":""}`} aria-current={distance===0?"true":undefined} tabIndex={Math.abs(distance)<=1?0:-1} aria-hidden={Math.abs(distance)>1} onClick={()=>seek(index*4)} style={{transform:`translateY(${distance*112}px) scale(${distance===0?1:.94})`,opacity:distance===0?1:Math.abs(distance)===1?.34:0}}>{line}</button>;

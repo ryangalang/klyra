@@ -1436,7 +1436,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             // A leftover APK only means "Install Now" for the session that
             // downloaded it — see AppUpdateChecker.clearCache.
             AppUpdateChecker.clearCache(getApplication())
-            AppUpdateChecker.check()
+            while (true) {
+                AppUpdateChecker.check()
+                kotlinx.coroutines.delay(6 * 60 * 60 * 1000L)
+            }
         }
     }
 
@@ -2857,6 +2860,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun collectSongs(
         browseId: String,
         artworkFallback: String? = null,
+        requireComplete: Boolean = false,
         onResult: (Result<List<Song>>) -> Unit,
     ) {
         viewModelScope.launch {
@@ -2886,7 +2890,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     LocalMediaRepository.getLocalMusic(context)
                         .ifEmpty { error(text(R.string.no_local_audio_found)) }
                 }
-                else -> YtMusicRepository.allSongs(browseId)
+                else -> if (requireComplete) YtMusicRepository.allSongsComplete(browseId) else YtMusicRepository.allSongs(browseId)
             }
             onResult(result.map { it.withArtwork(artworkFallback) })
         }

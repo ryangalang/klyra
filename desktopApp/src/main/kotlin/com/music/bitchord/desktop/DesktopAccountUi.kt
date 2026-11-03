@@ -316,6 +316,9 @@ internal fun DesktopSignInDialog(
                 color = Color.White,
                 modifier = Modifier.padding(start = 22.dp, end = 22.dp, top = 20.dp),
             )
+            Text("This connects your YouTube Music recommendations and provider library. To sync Klyra favorites and playlists with your phone, open Your Klyra account in Settings.",
+                style = MaterialTheme.typography.bodySmall, color = DesktopSecondary,
+                modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp))
             Text(
                 if (interactiveBrowser != null) {
                     DesktopStrings[

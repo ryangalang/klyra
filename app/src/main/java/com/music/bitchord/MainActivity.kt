@@ -2,6 +2,7 @@ package com.music.bitchord
 
 import app.klyra.shared.likes
 
+import app.klyra.shared.klyraTrack
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -2941,6 +2942,22 @@ private fun BitChordApp(
                             // is where a whole release is asked for — and the tracks
                             // arrive stamped with the album they came off, which is what
                             // the download record groups them under.
+                            onDownloadPlaylist = if (!page.browseId.startsWith("local:") && page.type != BrowseType.ARTIST) ({
+                                viewModel.collectSongs(page.browseId, page.thumbnailUrl, requireComplete = true) { result ->
+                                    result.onSuccess { all -> startDownload(all, DownloadTarget(page.browseId, page.title, page.subtitle, page.thumbnailUrl, page.type == BrowseType.PLAYLIST)) }
+                                        .onFailure { Toast.makeText(context, it.message ?: "Could not load the complete playlist", Toast.LENGTH_LONG).show() }
+                                }
+                            }) else null,
+                            onSavePlaylist = if (page.type == BrowseType.PLAYLIST) ({
+                                viewModel.collectSongs(page.browseId, page.thumbnailUrl, requireComplete = true) { result ->
+                                    result.onSuccess { all ->
+                                        val tracks = all.map { it.klyraTrack() }
+                                        app.klyra.shared.KlyraAccount.savePlaylist(app.klyra.shared.Playlist("saved:" + page.browseId, page.title,
+                                            trackIds = tracks.map { it.id }, cover = page.thumbnailUrl), tracks)
+                                        Toast.makeText(context, "Saving playlist to your Klyra library…", Toast.LENGTH_SHORT).show()
+                                    }.onFailure { Toast.makeText(context, it.message ?: "Could not save playlist", Toast.LENGTH_LONG).show() }
+                                }
+                            }) else null,
                             onMore = { songs ->
                                 browseActions = BrowseTarget(
                                     browseId = page.browseId,
@@ -3221,6 +3238,7 @@ private fun BitChordApp(
                             },
                         )
                         else -> LibraryScreen(
+                            onDownloadKlyraPlaylist = { songs, id, title -> startDownload(songs, DownloadTarget("klyra:$id", title, playlist = true)) },
                             signedIn = signedIn,
                             state = libraryState,
                             listState = libraryListState,
